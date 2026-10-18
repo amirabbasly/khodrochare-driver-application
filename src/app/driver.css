@@ -4775,6 +4775,75 @@
   }
 }
 
+/* stack the register layout before the plate field gets squeezed */
+@media (max-width: 760px) {
+  .auth-page--register {
+    display: block;
+    padding: 12px;
+  }
+
+  .auth-layout--register {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 24px);
+  }
+
+  .auth-visual--driver {
+    order: -1;
+    min-height: 252px;
+    flex: 0 0 252px;
+    justify-content: flex-start;
+  }
+
+  .auth-driver-copy {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 0 20px 18px;
+  }
+
+  .auth-driver-copy h2 {
+    margin: 7px 0 4px;
+    font-size: 19px;
+    line-height: 1.55;
+  }
+
+  .auth-driver-copy p {
+    display: none;
+  }
+
+  .auth-driver-points {
+    display: none;
+  }
+
+  .auth-driver-logo {
+    top: 13px;
+    right: 13px;
+    width: 130px;
+    padding: 8px 11px;
+    border-radius: 11px;
+  }
+
+  .auth-driver-veil {
+    background:
+      linear-gradient(180deg, rgba(7, 20, 29, 0.12) 0%, rgba(7, 20, 29, 0.26) 44%, rgba(7, 19, 28, 0.94) 100%);
+  }
+
+  .auth-driver-credit {
+    display: none;
+  }
+
+  .auth-form-panel--register {
+    padding: 26px 20px 28px;
+  }
+
+  .auth-page--register .auth-layout {
+    min-height: auto;
+    border-radius: 22px;
+  }
+}
+
 @media (max-width: 640px) {
   .auth-page--register {
     display: block;

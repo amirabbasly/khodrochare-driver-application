@@ -1,7 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
 
-type IconName =
+export type IconName =
   | "menu"
   | "bell"
   | "home"
@@ -37,7 +37,16 @@ type IconName =
   | "location"
   | "refresh"
   | "eye"
-  | "eye-off";
+  | "eye-off"
+  | "users"
+  | "route"
+  | "document"
+  | "book"
+  | "star"
+  | "power"
+  | "briefcase"
+  | "navigation"
+  | "upload";
 
 const paths: Record<IconName, ReactNode> = {
   menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
@@ -76,6 +85,15 @@ const paths: Record<IconName, ReactNode> = {
   refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6.1 9a7 7 0 0 1 11.5-2L20 12M4 12l2.4 5a7 7 0 0 0 11.5-2" /></>,
   eye: <><path d="M2.5 12s3.6-6.5 9.5-6.5S21.5 12 21.5 12 17.9 18.5 12 18.5 2.5 12 2.5 12Z" /><circle cx="12" cy="12" r="3" /></>,
   "eye-off": <><path d="M4 4l16 16" /><path d="M9.9 5.7A9.7 9.7 0 0 1 12 5.5c5.9 0 9.5 6.5 9.5 6.5a17.6 17.6 0 0 1-2.8 3.6M6.2 7.8A17.4 17.4 0 0 0 2.5 12s3.6 6.5 9.5 6.5a9.6 9.6 0 0 0 3.9-.8" /><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" /></>,
+  users: <><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></>,
+  route: <><circle cx="6" cy="19" r="2.5" /><circle cx="18" cy="5" r="2.5" /><path d="M8.5 19H15a4 4 0 0 0 0-8H9a4 4 0 0 1 0-8h6.5" /></>,
+  document: <><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9Z" /><path d="M14 3v6h6M8 13h8M8 17h5" /></>,
+  book: <><path d="M4 5a2 2 0 0 1 2-2h13v18H6a2 2 0 0 1-2-2Z" /><path d="M4 17h15M9 7h6" /></>,
+  star: <><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9Z" /></>,
+  power: <><path d="M12 3v9" /><path d="M6.4 6.4a8 8 0 1 0 11.2 0" /></>,
+  briefcase: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 12h18" /></>,
+  navigation: <><path d="m3 11 18-8-8 18-2.5-7.5Z" /></>,
+  upload: <><path d="M12 16V4M7 9l5-5 5 5" /><path d="M5 20h14" /></>,
 };
 
 export function Icon({

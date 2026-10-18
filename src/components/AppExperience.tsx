@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, type ReactNode } from "react";
 
-const splashMessage = "یک تماس، یک چاره؛ خودرو چاره";
+const splashMessage = "بار بگیر، مسیر بساز؛ خودرو چاره";
 
 export function SplashGate({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(true);
@@ -49,7 +49,7 @@ export function SplashGate({ children }: { children: ReactNode }) {
               />
             </div>
             <p className="splash-type-line" aria-live="polite"><span>{typedMessage}</span><i className="splash-cursor" /></p>
-            <p className="splash-subtitle">اگر تو راه موندی و عجله داری، سریع تماس بگیر.</p>
+            <p className="splash-subtitle">شبکهٔ امدادگران و سفیران خودرو چاره؛ همیشه در راه.</p>
             <a className="splash-phone" href="tel:02191855" dir="ltr" aria-label="تماس با خودرو چاره: ۰۲۱ ۹۱۸۵۵">
               <span className="splash-phone-prefix">۰۲۱</span>
               <span className="splash-phone-dash">-</span>
@@ -57,7 +57,7 @@ export function SplashGate({ children }: { children: ReactNode }) {
             </a>
             <div className="splash-loader" aria-hidden="true"><span /></div>
           </div>
-          <span className="splash-footer">همراه مطمئن تو در هر مسیر</span>
+          <span className="splash-footer">همراه ناوگان امداد در هر مسیر</span>
         </div>
       )}
     </>

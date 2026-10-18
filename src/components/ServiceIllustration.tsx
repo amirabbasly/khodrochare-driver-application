@@ -13,7 +13,17 @@ export type ServiceId =
   | "reminder"
   | "tripcheck"
   | "expert"
-  | "inspection";
+  | "inspection"
+  | "gearbox"
+  | "engine"
+  | "body"
+  | "electrical"
+  | "battery"
+  | "fuel"
+  | "tire"
+  | "training"
+  | "equipment"
+  | "fleet";
 
 export type ArtId = ServiceId | "wallet" | "oil";
 
@@ -477,6 +487,267 @@ const drawings: Record<ArtId, ReactNode> = {
       <path d="M48 17 c0 6.2-5 9.4-5 13.6 a5 5 0 0 0 10 0 C53 26.4 48 23.2 48 17 Z" fill="url(#g3d-ol-drop)" />
       <circle cx="46.2" cy="30.4" r="1.5" fill="#FFE7C6" />
       {sparkle(12, 13, 2.8, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── گیربکس ───────── */
+  gearbox: (
+    <>
+      <defs>
+        <linearGradient id="g3d-gb-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7592AA" />
+          <stop offset="1" stopColor="#2B455A" />
+        </linearGradient>
+        <linearGradient id="g3d-gb-gear" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC98F" />
+          <stop offset="1" stopColor="#E07222" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <path d="M23 26 v-6 a2 2 0 0 1 2-2 h5" stroke="#E06F22" strokeWidth="4.2" strokeLinecap="round" fill="none" />
+      <circle cx="31.5" cy="16.5" r="4" fill="url(#g3d-gb-gear)" />
+      <rect x="8" y="26" width="36" height="21" rx="5" fill="url(#g3d-gb-body)" />
+      <rect x="11" y="29" width="30" height="4" rx="2" fill="#A9C2D4" opacity=".45" />
+      <path d="M15 34 v9m7-9 v9m7-9 v9m7-9 v9" stroke="#1B3346" strokeWidth="1.8" strokeLinecap="round" opacity=".65" />
+      <rect x="43" y="34" width="7" height="4" rx="1.6" fill="#8FA9BC" />
+      <circle cx="53" cy="36" r="8.4" fill="none" stroke="url(#g3d-gb-gear)" strokeWidth="4.4" strokeDasharray="3 3.1" />
+      <circle cx="53" cy="36" r="3.2" fill="#22384B" />
+      {sparkle(54, 19, 3.2, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── موتور ───────── */
+  engine: (
+    <>
+      <defs>
+        <linearGradient id="g3d-en-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5E7A92" />
+          <stop offset="1" stopColor="#233B4F" />
+        </linearGradient>
+        <linearGradient id="g3d-en-head" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC386" />
+          <stop offset="1" stopColor="#E07222" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <rect x="9" y="27" width="37" height="20" rx="4.5" fill="url(#g3d-en-body)" />
+      <rect x="12" y="30" width="31" height="4" rx="2" fill="#A8C1D3" opacity=".4" />
+      <rect x="13" y="18" width="8" height="9" rx="2" fill="url(#g3d-en-head)" />
+      <rect x="24" y="18" width="8" height="9" rx="2" fill="url(#g3d-en-head)" />
+      <rect x="35" y="18" width="8" height="9" rx="2" fill="url(#g3d-en-head)" />
+      <path d="M17 18 v-4 m11 4 v-4 m11 4 v-4" stroke="#D9E7F0" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M46 32 h6 a3 3 0 0 1 3 3 v4" stroke="#E06F22" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+      <path d="M13 41 h26" stroke="#FFD9B0" strokeWidth="1.6" strokeLinecap="round" opacity=".7" />
+      <circle cx="53" cy="44" r="4" fill="none" stroke="#8FA9BC" strokeWidth="2.4" />
+      <path d="M9 35 h-4 v7 h4" stroke="#22384B" strokeWidth="2.4" fill="none" strokeLinejoin="round" />
+      {sparkle(11, 15, 3, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── بدنه و تزئینات ───────── */
+  body: (
+    <>
+      <defs>
+        <linearGradient id="g3d-bd-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC58C" />
+          <stop offset="1" stopColor="#EA7526" />
+        </linearGradient>
+        <linearGradient id="g3d-bd-glass" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#CFE3F1" />
+          <stop offset="1" stopColor="#6A8DA8" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <path d="M6 44 c0-5 3-8 9-9 l8-8 c3-3 7-5 11-5 h8 c5 0 9 2 11 6 l3 6 c3 1 5 3 5 6 v4 Z" fill="url(#g3d-bd-body)" />
+      <path d="M25 30 h11 v-6 h-2 c-3 0-6 1.5-8 4 Z" fill="url(#g3d-bd-glass)" />
+      <path d="M39 24 h7 c3 0 6 1 7 4 l2 4 h-16 Z" fill="url(#g3d-bd-glass)" />
+      <path d="M8 41 h52" stroke="#FFE0BE" strokeWidth="1.8" strokeLinecap="round" opacity=".7" />
+      <circle cx="18" cy="46" r="5.4" fill="#26343F" />
+      <circle cx="18" cy="46" r="2.2" fill="#DCE7EE" />
+      <circle cx="47" cy="46" r="5.4" fill="#26343F" />
+      <circle cx="47" cy="46" r="2.2" fill="#DCE7EE" />
+      <path d="M52 15 l3 3 3-3 2.5 2.5-3 3 3 3-2.5 2.5-3-3-3 3-2.5-2.5 3-3-3-3Z" fill="#FFD24D" opacity=".9" />
+      {sparkle(12, 13, 3, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── برق و باتری ───────── */
+  electrical: (
+    <>
+      <defs>
+        <linearGradient id="g3d-el-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3D5A71" />
+          <stop offset="1" stopColor="#162C3E" />
+        </linearGradient>
+        <linearGradient id="g3d-el-cap" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC98F" />
+          <stop offset="1" stopColor="#E07222" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <rect x="8" y="20" width="42" height="27" rx="5" fill="url(#g3d-el-body)" />
+      <rect x="12" y="16" width="10" height="6" rx="2" fill="url(#g3d-el-cap)" />
+      <rect x="36" y="16" width="10" height="6" rx="2" fill="url(#g3d-el-cap)" />
+      <rect x="15" y="14" width="4" height="4" rx="1" fill="#DCE7EE" />
+      <rect x="39" y="14" width="4" height="4" rx="1" fill="#DCE7EE" />
+      <path d="M20 24 h18" stroke="#8FA9BC" strokeWidth="1.6" strokeLinecap="round" opacity=".65" />
+      <path d="m31 25-9 12h7l-3 8 10-12h-6Z" fill="url(#g3d-el-cap)" />
+      <path d="M12 40 h34" stroke="#FFD9B0" strokeWidth="1.5" strokeLinecap="round" opacity=".35" />
+      <circle cx="50" cy="47" r="3" fill="none" stroke="#8FA9BC" strokeWidth="2" />
+      <path d="M8 47 h4" stroke="#8FA9BC" strokeWidth="2" strokeLinecap="round" />
+      {sparkle(52, 16, 3, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── باتری به باتری ───────── */
+  battery: (
+    <>
+      <defs>
+        <linearGradient id="g3d-bt-body" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4B6A83" />
+          <stop offset="1" stopColor="#1B3346" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <rect x="7" y="25" width="24" height="20" rx="4" fill="url(#g3d-bt-body)" />
+      <rect x="11" y="21" width="6" height="5" rx="1.6" fill="#FFA34F" />
+      <rect x="21" y="21" width="6" height="5" rx="1.6" fill="#FFA34F" />
+      <path d="M31 30 c7-7 12-7 16-3" stroke="#E14B3B" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+      <path d="M31 41 c7 7 12 7 16 3" stroke="#26343F" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+      <path d="M45 20 l6 3-3 6-6-3Z" fill="#E14B3B" />
+      <path d="M45 46 l6-3-3-6-6 3Z" fill="#26343F" />
+      <path d="m37 29 3 5h-3l2 5" stroke="#FFD24D" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 30 h12" stroke="#8FA9BC" strokeWidth="1.6" strokeLinecap="round" opacity=".6" />
+      {sparkle(51, 34, 3.4, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── سوخت‌رسانی ───────── */
+  fuel: (
+    <>
+      <defs>
+        <linearGradient id="g3d-fl-can" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC283" />
+          <stop offset="1" stopColor="#E07222" />
+        </linearGradient>
+        <linearGradient id="g3d-fl-drop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFD24D" />
+          <stop offset="1" stopColor="#F08A2C" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <path d="M20 27 v-5 a2 2 0 0 1 2-2 h12" stroke="#C9611F" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+      <path d="M20 24 h16" stroke="#C9611F" strokeWidth="3.4" strokeLinecap="round" />
+      <rect x="17" y="22" width="24" height="31" rx="5" fill="url(#g3d-fl-can)" />
+      <rect x="20" y="27" width="18" height="4" rx="2" fill="#FFE2C0" opacity=".65" />
+      <path d="M24 34 h10 v10 H24Z" fill="#22384B" opacity=".85" />
+      <path d="M31 35 c0 3-2.2 4.4-2.2 6.2 a2.2 2.2 0 0 0 4.4 0 C33.2 39.4 31 38 31 35 Z" fill="url(#g3d-fl-drop)" />
+      <path d="M41 29 h9 a3 3 0 0 1 3 3 v5" stroke="#22384B" strokeWidth="3" fill="none" strokeLinecap="round" />
+      <path d="M53 39 c0 4-3.2 6-3.2 8.4 a3.2 3.2 0 0 0 6.4 0 C56.2 45 53 43 53 39 Z" fill="url(#g3d-fl-drop)" />
+      {sparkle(11, 16, 3, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── پنچرگیری ───────── */
+  tire: (
+    <>
+      <defs>
+        <linearGradient id="g3d-tr-rubber" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#3B4F60" />
+          <stop offset="1" stopColor="#182A39" />
+        </linearGradient>
+        <linearGradient id="g3d-tr-rim" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#F2F7FA" />
+          <stop offset="1" stopColor="#AFC1CD" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <circle cx="29" cy="34" r="18" fill="url(#g3d-tr-rubber)" />
+      <circle cx="29" cy="34" r="12" fill="none" stroke="#4E6779" strokeWidth="1.6" strokeDasharray="2.4 3.4" />
+      <circle cx="29" cy="34" r="8.6" fill="url(#g3d-tr-rim)" />
+      <circle cx="29" cy="34" r="3.2" fill="#22384B" />
+      <path d="M24 24 l3 3m7 14 3 3m-1-19-3 3m-11 13-3 3" stroke="#6F8698" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M49 16 36 29m10-16 6 6-10 10-6-6Z" stroke="#E06F22" strokeWidth="3.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M46 13 a4 4 0 0 1 6 0l2 2a4 4 0 0 1 0 6l-2 2" stroke="#E06F22" strokeWidth="3.4" fill="none" strokeLinecap="round" />
+      {sparkle(54, 33, 3, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── آموزش امداد ───────── */
+  training: (
+    <>
+      <defs>
+        <linearGradient id="g3d-tn-cap" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#5C7B94" />
+          <stop offset="1" stopColor="#22384B" />
+        </linearGradient>
+        <linearGradient id="g3d-tn-page" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFFFFF" />
+          <stop offset="1" stopColor="#D8E6EF" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <path d="M12 35 h40 v12 a3 3 0 0 1-3 3 H15 a3 3 0 0 1-3-3Z" fill="url(#g3d-tn-page)" />
+      <path d="M32 35 v15M16 39h11m-11 4h8m10-4h11m-11 4h8" stroke="#9DB2C1" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M32 35 10 27l22-8 22 8Z" fill="url(#g3d-tn-cap)" />
+      <path d="M32 19 10 27l22 8 22-8Z" fill="#8FA9BC" opacity=".55" />
+      <path d="M50 29 v9" stroke="#FFB871" strokeWidth="2.2" strokeLinecap="round" />
+      <circle cx="50" cy="40" r="3" fill="#E07222" />
+      <path d="M33 21v5" stroke="#DDEAF3" strokeWidth="1.8" strokeLinecap="round" opacity=".7" />
+      {sparkle(9, 22, 3, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── تجهیزات امداد ───────── */
+  equipment: (
+    <>
+      <defs>
+        <linearGradient id="g3d-eq-box" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC386" />
+          <stop offset="1" stopColor="#E07222" />
+        </linearGradient>
+        <linearGradient id="g3d-eq-lid" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#6B879E" />
+          <stop offset="1" stopColor="#284256" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <path d="M9 32 h46 v17 a3 3 0 0 1-3 3 H12 a3 3 0 0 1-3-3Z" fill="url(#g3d-eq-box)" />
+      <path d="M9 32 l7-9 h32 l7 9Z" fill="url(#g3d-eq-lid)" />
+      <path d="M26 23 v-5 a2 2 0 0 1 2-2 h8 a2 2 0 0 1 2 2 v5" stroke="#22384B" strokeWidth="3" fill="none" />
+      <path d="M9 38 h46" stroke="#FFE0BE" strokeWidth="2" opacity=".6" />
+      <path d="M29 36 h6 v5 h-6Z" fill="#22384B" opacity=".8" />
+      <path d="M45 20 33 32m9-15 5 5-9 9-5-5Z" stroke="#E8F2F8" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="41" cy="12" r="2.6" fill="#FFD24D" />
+      {sparkle(14, 15, 2.8, "#FFD9A6")}
+    </>
+  ),
+
+  /* ───────── ناوگان ───────── */
+  fleet: (
+    <>
+      <defs>
+        <linearGradient id="g3d-fe-van" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#FFC98F" />
+          <stop offset="1" stopColor="#E07222" />
+        </linearGradient>
+        <linearGradient id="g3d-fe-car" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#7E9AB1" />
+          <stop offset="1" stopColor="#2B465B" />
+        </linearGradient>
+      </defs>
+      {shadow}
+      <rect x="9" y="27" width="30" height="17" rx="4" fill="url(#g3d-fe-van)" />
+      <path d="M12 27 h16 v-6 h-9Z" fill="#FFE0BE" opacity=".8" />
+      <path d="M14 30 h12 v5 H14Z" fill="#C7DEED" opacity=".75" />
+      <circle cx="18" cy="45" r="4.4" fill="#26343F" /><circle cx="18" cy="45" r="1.9" fill="#DCE7EE" />
+      <circle cx="32" cy="45" r="4.4" fill="#26343F" /><circle cx="32" cy="45" r="1.9" fill="#DCE7EE" />
+      <path d="M39 30 h10 l5 7 v7 H39Z" fill="url(#g3d-fe-car)" />
+      <path d="M41 32 h6 l3 4 h-9Z" fill="#D6E4EE" opacity=".75" />
+      <circle cx="43" cy="45" r="4" fill="#26343F" /><circle cx="43" cy="45" r="1.7" fill="#DCE7EE" />
+      <circle cx="52" cy="45" r="4" fill="#26343F" /><circle cx="52" cy="45" r="1.7" fill="#DCE7EE" />
+      <path d="M8 38 h3" stroke="#FFE6C8" strokeWidth="2.4" strokeLinecap="round" />
+      {sparkle(52, 16, 3, "#FFD9A6")}
     </>
   ),
 };

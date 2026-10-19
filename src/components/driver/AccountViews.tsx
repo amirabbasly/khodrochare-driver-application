@@ -6,9 +6,11 @@ import { ServiceIllustration } from "@/components/ServiceIllustration";
 import {
   Avatar,
   courses,
+  IranFlag,
   PageTitle,
+  providerServices,
   SectionTitle,
-  vehicleTypes,
+  vehicleSuggestions,
   type DriverSession,
   type View,
 } from "@/components/driver/shared";
@@ -19,7 +21,7 @@ export function PlateDisplay({ plate, compact = false }: { plate?: string; compa
   const text = plate || "۱۲ ب ۳۴۵ - ۶۷";
   return (
     <span className={`plate-badge${compact ? " plate-badge--compact" : ""}`} dir="ltr" aria-label={`پلاک خودرو ${text}`}>
-      <span className="plate-badge-iran"><small>IR</small><b>ایران</b></span>
+      <span className="plate-badge-iran"><small>IR</small><IranFlag className="plate-flag" /><b>ایران</b></span>
       <b className="plate-badge-text">{text}</b>
     </span>
   );
@@ -69,6 +71,15 @@ export function ProfileView({
             <span><Icon name="car" size={15} /></span>
             <div><small>خودروی امدادی</small><strong>{session.vehicleType || "یدک‌کش / جرثقیل"}</strong></div>
             <PlateDisplay plate={session.plate} compact />
+          </div>
+          <div className="profile-services">
+            <span className="profile-services-label"><Icon name="briefcase" size={13} /> خدمات قابل ارائه</span>
+            <div className="profile-services-chips">
+              {(session.services && session.services.length > 0 ? session.services : providerServices.map((service) => service.id)).map((id) => {
+                const service = providerServices.find((item) => item.id === id);
+                return service ? <span key={id}>{service.name}</span> : null;
+              })}
+            </div>
           </div>
         </section>
 
@@ -161,11 +172,12 @@ export function VehicleView({
             <label className="form-field">
               <span className="field-label">نوع خودرو</span>
               <span className="field-control">
-                <select value={vehicleType} onChange={(event) => setVehicleType(event.target.value)}>
-                  {vehicleTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-                </select>
-                <Icon name="chevron" size={15} />
+                <input list="vehicle-suggestions-edit" value={vehicleType} onChange={(event) => setVehicleType(event.target.value)} placeholder="مثلاً نیسان آبی" />
+                <Icon name="car" size={15} />
               </span>
+              <datalist id="vehicle-suggestions-edit">
+                {vehicleSuggestions.map((suggestion) => <option key={suggestion} value={suggestion} />)}
+              </datalist>
             </label>
             <label className="form-field"><span className="field-label">مدل خودرو</span><span className="field-control"><input value={model} onChange={(event) => setModel(event.target.value)} placeholder="مثلاً ایویکو یدک‌کش" /></span></label>
             <label className="form-field"><span className="field-label">پلاک خودرو</span><span className="field-control field-control--ltr"><input value={plate} onChange={(event) => setPlate(event.target.value)} dir="ltr" /></span></label>

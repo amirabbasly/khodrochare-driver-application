@@ -34,6 +34,7 @@ const defaultSession: DriverSession = {
   vehicleType: "یدک‌کش / جرثقیل",
   plate: "۱۲ ب ۳۴۵ - ۶۷",
   nationalCode: "۰۰۱۲۳۴۵۶۷۸",
+  services: ["repair", "transport", "carwash", "inspection", "maintenance"],
 };
 
 const bottomItems: { label: string; view: View; icon: IconName }[] = [

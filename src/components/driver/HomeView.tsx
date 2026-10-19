@@ -167,31 +167,164 @@ export function LoadOfferCard({
   );
 }
 
-function ReadinessCard({ ready, onToggle, onNavigate }: { ready: boolean; onToggle: () => void; onNavigate: (view: View) => void }) {
+const ROTATE_SECONDS = 15;
+
+function LoadHero({
+  ready,
+  loads,
+  activeCount,
+  onToggleReady,
+  onNavigate,
+  onAccept,
+  onReject,
+  onProfile,
+}: {
+  ready: boolean;
+  loads: LoadOffer[];
+  activeCount: number;
+  onToggleReady: () => void;
+  onNavigate: (view: View) => void;
+  onAccept: (load: LoadOffer) => void;
+  onReject: (load: LoadOffer) => void;
+  onProfile: (load: LoadOffer) => void;
+}) {
+  const total = loads.length;
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!ready || total === 0) return;
+    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [ready, total]);
+
+  const index = total > 0 ? Math.floor(tick / ROTATE_SECONDS) % total : 0;
+  const seconds = ROTATE_SECONDS - (tick % ROTATE_SECONDS);
+  const current = total > 0 ? loads[index] : null;
+  const progress = Math.round((seconds / ROTATE_SECONDS) * 100);
+
   return (
-    <section className={`readiness-card${ready ? " is-on" : ""}`} aria-label="آمادگی دریافت بار">
-      <div className="readiness-top">
-        <span className="readiness-icon"><Icon name="power" size={20} /></span>
-        <div className="readiness-copy">
-          <small>آمادگی دریافت بار</small>
-          <strong>{ready ? "آمادگی فعال" : "آمادگی غیرفعال"}</strong>
+    <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار و آمادگی دریافت بار">
+      <div className="load-hero-top">
+        <div className="lh-top-head">
+          <span className="lh-live"><i /> آخرین بار</span>
+          <span className="lh-counter">
+            {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
+          </span>
+          <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
+          <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
+            تالار ایرانشهر <Icon name="arrow-left" size={14} />
+          </button>
         </div>
-        <button
-          className={`ready-switch${ready ? " is-on" : ""}`}
-          type="button"
-          role="switch"
-          aria-checked={ready}
-          onClick={onToggle}
-          aria-label={ready ? "غیرفعال کردن آمادگی" : "فعال کردن آمادگی"}
-        >
-          <i />
-        </button>
+
+        {!ready ? (
+          <div className="lh-top-empty">
+            <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
+            <div>
+              <strong>آمادگی دریافت بار غیرفعال است</strong>
+              <p>بارها تا وقتی آمادگی را فعال نکنی نمایش داده نمی‌شوند.</p>
+            </div>
+          </div>
+        ) : !current ? (
+          <div className="lh-top-empty lh-top-empty--calm">
+            <span className="lh-empty-icon"><Icon name="check" size={22} /></span>
+            <div>
+              <strong>بار آزادی در محدودهٔ تو نیست</strong>
+              <p>آمادگی‌ات فعال است؛ به‌محض ثبت بار جدید اینجا نمایش داده می‌شود.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="lh-top-body">
+            <div className="lh-person">
+              <Avatar name={current.customer} tone={current.tone} />
+              <div>
+                <strong>{current.customer}</strong>
+                <small><Icon name="shield" size={12} /> {current.role} · ★ {current.rating.toLocaleString("fa-IR")}</small>
+              </div>
+            </div>
+
+            <div className="lh-route">
+              <span className="lh-stop"><i className="route-dot route-dot--from" /><span><small>مبدأ</small><b>{current.from}</b></span></span>
+              <span className="lh-route-line"><Icon name="arrow-left" size={13} /></span>
+              <span className="lh-stop"><i className="route-dot route-dot--to" /><span><small>مقصد</small><b>{current.to}</b></span></span>
+            </div>
+
+            <div className="lh-facts">
+              <span><Icon name="car" size={13} /> {current.car}</span>
+              <span dir="ltr"><Icon name="tag" size={12} /> {current.plate}</span>
+              <span><Icon name="route" size={13} /> {current.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
+              <span><Icon name="clock" size={13} /> {current.when}</span>
+            </div>
+
+            <div className="lh-price">
+              <small>کرایهٔ بار</small>
+              <b>{formatToman(current.price)}</b>
+            </div>
+          </div>
+        )}
       </div>
-      <p>{ready ? "بارهای نزدیک محدودهٔ خدمتت الان بهت پیشنهاد می‌شود." : "اپلیکیشن فعلاً باری بهت نشان نمی‌دهد؛ برای دریافت بار آمادگی را فعال کن."}</p>
-      <button className="readiness-link" type="button" onClick={() => onNavigate("readiness")}>
-        تنظیم شیفت و محدوده <Icon name="arrow-left" size={14} />
-      </button>
-      <span className="readiness-pulse" aria-hidden="true" />
+
+      <div className="load-hero-grid">
+        <div className={`lh-ready${ready ? " is-on" : ""}`}>
+          <div className="lh-ready-top">
+            <span className="lh-ready-icon"><Icon name="power" size={20} /></span>
+            <button
+              className={`ready-switch${ready ? " is-on" : ""}`}
+              type="button"
+              role="switch"
+              aria-checked={ready}
+              onClick={onToggleReady}
+              aria-label={ready ? "غیرفعال کردن آمادگی" : "فعال کردن آمادگی"}
+            >
+              <i />
+            </button>
+          </div>
+          <strong>{ready ? "آمادگی فعال" : "آمادگی غیرفعال"}</strong>
+          <p>{ready ? "بارهای نزدیک محدودهٔ تو بهت پیشنهاد می‌شود." : "برای دیدن و گرفتن بار، آمادگی را فعال کن."}</p>
+          <div className="lh-ready-foot">
+            <span><Icon name="briefcase" size={13} /> {activeCount.toLocaleString("fa-IR")} بار در حال انجام</span>
+            <button type="button" onClick={() => onNavigate("readiness")}>شیفت و محدوده <Icon name="chevron" size={12} /></button>
+          </div>
+        </div>
+
+        <div className="lh-actions">
+          <div className="lh-timer" style={{ ["--timer-progress" as string]: `${progress}%` }}>
+            <span className="lh-timer-ring">
+              <b>{seconds.toLocaleString("fa-IR")}</b>
+              <small>ثانیه</small>
+            </span>
+            <div className="lh-timer-copy">
+              <strong>زمان تصمیم‌گیری</strong>
+              <p>تا تغییر بار بعدی؛ بعد از این زمان بار بعدی جای این یکی را می‌گیرد.</p>
+            </div>
+          </div>
+          <div className="lh-action-buttons">
+            <button
+              className="lh-accept"
+              type="button"
+              disabled={!ready || !current}
+              onClick={() => current && onAccept(current)}
+            >
+              <Icon name="check" size={17} /> تأیید و گرفتن بار
+            </button>
+            <button
+              className="lh-reject"
+              type="button"
+              disabled={!ready || !current}
+              onClick={() => current && onReject(current)}
+            >
+              <Icon name="close" size={16} /> رد کردن
+            </button>
+            <button
+              className="lh-profile"
+              type="button"
+              disabled={!current}
+              onClick={() => current && onProfile(current)}
+            >
+              <Icon name="user" size={15} /> پروفایل
+            </button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
@@ -247,8 +380,6 @@ export function HomeView({
   onOpenPart: (key: PartKey) => void;
   onOpenService: (service: DriverService) => void;
 }) {
-  const visibleLoads = pendingLoads.slice(0, 2);
-
   return (
     <div className="home-content">
       <section className="wallet-strip" aria-label="موجودی کیف پول">
@@ -263,60 +394,18 @@ export function HomeView({
         <span className="wallet-strip-glow" aria-hidden="true" />
       </section>
 
-      <section className="ops-layout" aria-label="آخرین بارها و وضعیت آمادگی">
-        <div className="ops-board">
-          <div className="ops-board-head">
-            <div className="ops-board-title">
-              <span className="live-dot" />
-              <strong>آخرین بارها</strong>
-              <span className="ops-count">{pendingLoads.length.toLocaleString("fa-IR")} بار آزاد</span>
-            </div>
-            <button className="ops-board-link" type="button" onClick={() => onNavigate("shahr")}>
-              تالار ایرانشهر <Icon name="arrow-left" size={14} />
-            </button>
-          </div>
+      <LoadHero
+        ready={ready}
+        loads={pendingLoads}
+        activeCount={activeCount}
+        onToggleReady={onToggleReady}
+        onNavigate={onNavigate}
+        onAccept={onAcceptLoad}
+        onReject={onRejectLoad}
+        onProfile={onProfile}
+      />
 
-          {!ready ? (
-            <div className="ops-offline">
-              <span className="ops-offline-icon"><Icon name="power" size={22} /></span>
-              <div>
-                <strong>آمادگی دریافت بار غیرفعال است</strong>
-                <p>با فعال کردن آمادگی، همین‌جا بارهای آزاد نزدیک محدوده‌ات را می‌بینی.</p>
-              </div>
-              <button type="button" onClick={onToggleReady}>فعال کردن</button>
-            </div>
-          ) : visibleLoads.length === 0 ? (
-            <div className="ops-offline ops-offline--empty">
-              <span className="ops-offline-icon"><Icon name="check" size={22} /></span>
-              <div><strong>همهٔ بارها بررسی شدند</strong><p>بار آزاد جدیدی در محدودهٔ تو نیست. آمادگی‌ات فعال است.</p></div>
-              <button type="button" onClick={() => onNavigate("shahr")}>تالار ایرانشهر</button>
-            </div>
-          ) : (
-            <div className="ops-load-list">
-              {visibleLoads.map((load) => (
-                <LoadOfferCard
-                  key={load.id}
-                  load={load}
-                  compact
-                  onAccept={() => onAcceptLoad(load)}
-                  onReject={() => onRejectLoad(load)}
-                  onProfile={() => onProfile(load)}
-                />
-              ))}
-            </div>
-          )}
-
-          <div className="ops-board-foot">
-            <span><Icon name="briefcase" size={13} /> {activeCount.toLocaleString("fa-IR")} بار در حال انجام</span>
-            <button type="button" onClick={() => onNavigate("loads")}>بارهای من <Icon name="arrow-left" size={13} /></button>
-          </div>
-        </div>
-
-        <div className="ops-side">
-          <ReadinessCard ready={ready} onToggle={onToggleReady} onNavigate={onNavigate} />
-          <ServiceLogCard onNavigate={onNavigate} />
-        </div>
-      </section>
+      <ServiceLogCard onNavigate={onNavigate} />
 
       <section className="main-services-section">
         <SectionTitle
@@ -324,7 +413,7 @@ export function HomeView({
           caption="گیربکس، موتور و قطعات ضروری ناوگان؛ با قیمت همکار و ارسال سریع."
           action={<button className="text-link" type="button" onClick={() => onNavigate("parts")}>همهٔ قطعات <Icon name="arrow-left" size={14} /></button>}
         />
-        <div className="main-services-grid">
+        <div className="main-services-grid parts-row">
           {partCategories.map((category, index) => (
             <PartCategoryCard
               key={category.key}

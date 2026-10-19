@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BrandLogo, Icon } from "@/components/Icons";
-import { vehicleTypes } from "@/components/driver/shared";
+import { ServiceIllustration } from "@/components/ServiceIllustration";
+import { IranFlag, providerServices, vehicleSuggestions } from "@/components/driver/shared";
 
 const USERS_KEY = "khodrochare_users_v1";
 const SESSION_KEY = "khodrochare_session_v1";
@@ -23,6 +24,7 @@ type LocalUser = {
   plate?: string;
   nationalCode?: string;
   documentName?: string;
+  services?: string[];
   role?: string;
 };
 
@@ -223,6 +225,7 @@ function PlateField({
       <div className="plate-shell" dir="ltr">
         <span className="plate-iran" aria-hidden="true">
           <small>IR</small>
+          <IranFlag className="plate-flag" />
           <b>ایران</b>
         </span>
         <input
@@ -425,6 +428,7 @@ export function LoginScreen() {
       plate: user.plate,
       nationalCode: user.nationalCode,
       documentName: user.documentName,
+      services: user.services ?? [],
     }, remember);
     router.push("/home");
   }
@@ -465,6 +469,7 @@ export function RegisterScreen() {
   const [vehicleType, setVehicleType] = useState("");
   const [plate, setPlate] = useState({ two: "", letter: "ب", three: "", province: "" });
   const [nationalCode, setNationalCode] = useState("");
+  const [services, setServices] = useState<string[]>([]);
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -503,8 +508,12 @@ export function RegisterScreen() {
       setError("نام و نام خانوادگی را کامل وارد کن.");
       return;
     }
-    if (!vehicleType) {
-      setError("نوع خودرو را انتخاب کن.");
+    if (!vehicleType.trim()) {
+      setError("نوع خودرو را وارد کن؛ مثلاً نیسان آبی.");
+      return;
+    }
+    if (services.length === 0) {
+      setError("دست‌کم یک خدمت قابل ارائه را انتخاب کن.");
       return;
     }
     if (!/^\d{2}$/.test(plate.province) || !/^\d{2}$/.test(plate.two) || !/^\d{3}$/.test(plate.three)) {
@@ -541,10 +550,11 @@ export function RegisterScreen() {
       username: normalizedPhone,
       phone: normalizedPhone,
       password,
-      vehicleType,
+      vehicleType: vehicleType.trim(),
       plate: plateText,
       nationalCode,
       documentName: docFile.name,
+      services,
       role: "driver",
     };
     storeSession({
@@ -557,6 +567,7 @@ export function RegisterScreen() {
       plate: user.plate,
       nationalCode: user.nationalCode,
       documentName: user.documentName,
+      services: user.services ?? [],
     }, true);
     localStorage.setItem(USERS_KEY, JSON.stringify([...users, user]));
     router.push("/home");
@@ -593,13 +604,22 @@ export function RegisterScreen() {
               <div className="register-grid">
                 <label className="form-field" htmlFor="vehicle-type">
                   <span className="field-label">نوع خودرو</span>
-                  <span className={`field-control field-control--select${vehicleType ? "" : " is-placeholder"}`}>
-                    <select id="vehicle-type" value={vehicleType} onChange={(event) => setVehicleType(event.target.value)}>
-                      <option value="" disabled>انتخاب کن</option>
-                      {vehicleTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-                    </select>
-                    <Icon name="chevron" size={15} />
+                  <span className="field-control">
+                    <input
+                      id="vehicle-type"
+                      list="vehicle-suggestions"
+                      value={vehicleType}
+                      onChange={(event) => setVehicleType(event.target.value)}
+                      placeholder="مثلاً نیسان آبی"
+                      autoComplete="off"
+                      maxLength={40}
+                    />
+                    <Icon name="car" size={15} className="field-control-icon" />
                   </span>
+                  <datalist id="vehicle-suggestions">
+                    {vehicleSuggestions.map((suggestion) => <option key={suggestion} value={suggestion} />)}
+                  </datalist>
+                  <span className="field-hint">اسم خودرو را تایپ کن؛ از پیشنهادها هم می‌توانی انتخاب کنی.</span>
                 </label>
                 <PlateField value={plate} onChange={setPlate} />
               </div>
@@ -608,6 +628,34 @@ export function RegisterScreen() {
             <section className="register-section">
               <div className="register-section-head">
                 <span className="register-step">۳</span>
+                <div><strong>خدمات قابل ارائه</strong><small>هر خدمتی که می‌دهی را انتخاب کن (چند مورد مجاز است).</small></div>
+                <span className="register-picked">{services.length.toLocaleString("fa-IR")} انتخاب</span>
+              </div>
+              <div className="service-picker" role="group" aria-label="خدمات قابل ارائه">
+                {providerServices.map((service) => {
+                  const active = services.includes(service.id);
+                  return (
+                    <button
+                      key={service.id}
+                      type="button"
+                      className={`service-picker-item${active ? " is-active" : ""}`}
+                      aria-pressed={active}
+                      onClick={() => setServices((current) => active
+                        ? current.filter((id) => id !== service.id)
+                        : [...current, service.id])}
+                    >
+                      <span className="service-picker-art"><ServiceIllustration type={service.art} size="sm" /></span>
+                      <span className="service-picker-copy"><strong>{service.name}</strong><small>{service.note}</small></span>
+                      <span className="service-picker-check"><Icon name="check" size={12} /></span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+
+            <section className="register-section">
+              <div className="register-section-head">
+                <span className="register-step">۴</span>
                 <div><strong>احراز هویت</strong><small>یک تصویر روشن از کارت ملی یا شناسنامه.</small></div>
               </div>
               <DocumentUpload fileName={docFile?.name ?? ""} preview={docPreview} onPick={pickDocument} onClear={clearDocument} />
@@ -615,7 +663,7 @@ export function RegisterScreen() {
 
             <section className="register-section register-section--account">
               <div className="register-section-head">
-                <span className="register-step">۴</span>
+                <span className="register-step">۵</span>
                 <div><strong>اطلاعات ورود</strong><small>با این شماره و رمز، وارد حساب می‌شوی.</small></div>
               </div>
               <div className="register-grid">

@@ -398,7 +398,6 @@ export default function Dashboard() {
           ready={ready}
           pendingLoads={pendingLoads}
           activeCount={activeCount}
-          onToggleReady={toggleReady}
           onNavigate={navigate}
           onToast={notify}
           onAcceptLoad={acceptLoad}
@@ -453,7 +452,6 @@ export default function Dashboard() {
           ready={ready}
           pendingLoads={pendingLoads}
           activeCount={activeCount}
-          onToggleReady={toggleReady}
           onNavigate={navigate}
           onToast={notify}
           onAcceptLoad={acceptLoad}
@@ -475,10 +473,16 @@ export default function Dashboard() {
           </div>
           <button className="header-brand-button" type="button" onClick={() => navigate("home")} aria-label="بازگشت به خانه"><BrandLogo compact /></button>
           <div className="header-meta">
-            <span className={`header-ready-chip${ready ? " is-on" : ""}`}><i />{ready ? "آماده" : "غیرفعال"}</span>
-            <button className="header-profile-chip" type="button" onClick={() => navigate("profile")}>
-              <Avatar name={userName} tone={4} />
-              <span className="header-profile-text"><strong>{userName}</strong><small>کیف پول <b>{balance.toLocaleString("fa-IR")}</b></small></span>
+            <button
+              className={`header-ready-switch${ready ? " is-on" : ""}`}
+              type="button"
+              role="switch"
+              aria-checked={ready}
+              onClick={toggleReady}
+              aria-label={ready ? "آمادگی دریافت بار روشن است؛ خاموش کردن" : "آمادگی دریافت بار خاموش است؛ روشن کردن"}
+              title={ready ? "آمادگی دریافت بار: روشن" : "آمادگی دریافت بار: خاموش"}
+            >
+              <span className="header-ready-icon"><Icon name="power" size={19} /></span>
             </button>
             <button className="notification-button" type="button" onClick={() => navigate("notifications")} aria-label="اعلان‌ها"><Icon name="bell" size={20} /><i /></button>
           </div>

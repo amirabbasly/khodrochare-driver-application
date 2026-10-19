@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/Icons";
+import { LoadRequestMap } from "@/components/Maps";
 import { MoreDots3D, ServiceIllustration } from "@/components/ServiceIllustration";
 import {
   Avatar,
@@ -172,7 +173,6 @@ function LoadHero({
   ready,
   loads,
   activeCount,
-  onToggleReady,
   onNavigate,
   onAccept,
   onReject,
@@ -181,7 +181,6 @@ function LoadHero({
   ready: boolean;
   loads: LoadOffer[];
   activeCount: number;
-  onToggleReady: () => void;
   onNavigate: (view: View) => void;
   onAccept: (load: LoadOffer) => void;
   onReject: (load: LoadOffer) => void;
@@ -200,140 +199,121 @@ function LoadHero({
   const seconds = ROTATE_SECONDS - (tick % ROTATE_SECONDS);
   const current = total > 0 ? loads[index] : null;
   const progress = Math.round((seconds / ROTATE_SECONDS) * 100);
+  const isCarry = current ? current.weight.startsWith("حمل") : false;
 
   return (
-    <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار و آمادگی دریافت بار">
-      <div className="load-hero-grid">
-        <div className={`lh-ready${ready ? " is-on" : ""}`}>
-          <div className="lh-panel-head lh-panel-head--ready">
-            <span className="lh-panel-index">۲</span>
-            <strong>وضعیت آمادگی</strong>
-            <small className="lh-panel-hint">کلید روشن/خاموش دریافت بار</small>
-          </div>
-          <div className="lh-ready-top">
-            <span className="lh-ready-icon"><Icon name="power" size={20} /></span>
-            <button
-              className={`ready-switch${ready ? " is-on" : ""}`}
-              type="button"
-              role="switch"
-              aria-checked={ready}
-              onClick={onToggleReady}
-              aria-label={ready ? "غیرفعال کردن آمادگی" : "فعال کردن آمادگی"}
-            >
-              <i />
-            </button>
-          </div>
-          <strong>{ready ? "آمادگی فعال" : "آمادگی غیرفعال"}</strong>
-          <p>{ready ? "بارهای نزدیک محدودهٔ تو بهت پیشنهاد می‌شود." : "برای دیدن و گرفتن بار، آمادگی را فعال کن."}</p>
-          <div className="lh-ready-foot">
-            <span><Icon name="briefcase" size={13} /> {activeCount.toLocaleString("fa-IR")} بار در حال انجام</span>
-            <button type="button" onClick={() => onNavigate("readiness")}>شیفت و محدوده <Icon name="chevron" size={12} /></button>
+    <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار آزاد و درخواست امداد">
+      <div className="lh-panel-head lh-panel-head--load">
+        <span className="lh-panel-index">۱</span>
+        <strong>آخرین بار</strong>
+        <small className="lh-panel-hint">درخواست امدادخواه روی نقشه</small>
+        <span className="lh-live"><i /> {ready ? "آمادهٔ دریافت بار" : "آمادگی خاموش"}</span>
+        <span className="lh-counter">
+          {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
+        </span>
+        <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
+        <span className="lh-active-count"><Icon name="briefcase" size={12} /> {activeCount.toLocaleString("fa-IR")} در حال انجام</span>
+        <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
+          تالار ایرانشهر <Icon name="arrow-left" size={14} />
+        </button>
+      </div>
+
+      {!ready ? (
+        <div className="lh-top-empty">
+          <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
+          <div>
+            <strong>آمادگی دریافت بار خاموش است</strong>
+            <p>با کلید آمادگی در بالای صفحه روشنش کن تا بارهای نزدیک محدوده‌ات اینجا نشان داده شوند.</p>
           </div>
         </div>
-
-        <div className="load-hero-main">
-          <div className="lh-panel-head lh-panel-head--load">
-            <span className="lh-panel-index">۱</span>
-            <strong>آخرین بار</strong>
-            <small className="lh-panel-hint">درخواست بار و پاسخ شما</small>
-            <span className="lh-live"><i /> بار آزاد</span>
-            <span className="lh-counter">
-              {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
-            </span>
-            <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
-            <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
-              تالار ایرانشهر <Icon name="arrow-left" size={14} />
-            </button>
+      ) : !current ? (
+        <div className="lh-top-empty lh-top-empty--calm">
+          <span className="lh-empty-icon"><Icon name="check" size={22} /></span>
+          <div>
+            <strong>بار آزادی در محدودهٔ تو نیست</strong>
+            <p>آمادگی‌ات فعال است؛ به‌محض ثبت بار جدید اینجا نمایش داده می‌شود.</p>
           </div>
-
-          {!ready ? (
-            <div className="lh-top-empty">
-              <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
+        </div>
+      ) : (
+        <article className="load-request">
+          <header className="load-request-summary">
+            <div className="load-request-person">
+              <Avatar name={current.customer} tone={current.tone} />
               <div>
-                <strong>آمادگی دریافت بار غیرفعال است</strong>
-                <p>بارها تا وقتی آمادگی را فعال نکنی نمایش داده نمی‌شوند.</p>
+                <strong>{current.customer}</strong>
+                <small><Icon name="shield" size={12} /> {current.role} · ★ {current.rating.toLocaleString("fa-IR")}</small>
               </div>
+              <button
+                className="load-request-profile"
+                type="button"
+                onClick={() => onProfile(current)}
+                aria-label="پروفایل امدادخواه"
+                title="پروفایل امدادخواه"
+              >
+                <Icon name="user" size={15} />
+              </button>
             </div>
-          ) : !current ? (
-            <div className="lh-top-empty lh-top-empty--calm">
-              <span className="lh-empty-icon"><Icon name="check" size={22} /></span>
-              <div>
-                <strong>بار آزادی در محدودهٔ تو نیست</strong>
-                <p>آمادگی‌ات فعال است؛ به‌محض ثبت بار جدید اینجا نمایش داده می‌شود.</p>
-              </div>
-            </div>
-          ) : (
-            <div className="lh-top-body">
-              <div className="lh-person">
-                <Avatar name={current.customer} tone={current.tone} />
-                <div>
-                  <strong>{current.customer}</strong>
-                  <small><Icon name="shield" size={12} /> {current.role} · ★ {current.rating.toLocaleString("fa-IR")}</small>
-                </div>
-              </div>
 
-              <div className="lh-route">
-                <span className="lh-stop"><i className="route-dot route-dot--from" /><span><small>مبدأ</small><b>{current.from}</b></span></span>
-                <span className="lh-route-line"><Icon name="arrow-left" size={13} /></span>
-                <span className="lh-stop"><i className="route-dot route-dot--to" /><span><small>مقصد</small><b>{current.to}</b></span></span>
-              </div>
+            <span className="load-request-price">
+              <small>مبلغ بار</small>
+              <b>{formatToman(current.price)}</b>
+            </span>
+          </header>
 
-              <div className="lh-price">
-                <small>کرایهٔ بار</small>
-                <b>{formatToman(current.price)}</b>
-              </div>
-
-              <div className="lh-facts">
-                <span><Icon name="car" size={13} /> {current.car}</span>
-                <span dir="ltr"><Icon name="tag" size={12} /> {current.plate}</span>
-                <span><Icon name="route" size={13} /> {current.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
-                <span><Icon name="clock" size={13} /> {current.when}</span>
-              </div>
+          {isCarry && (
+            <div className="load-request-route">
+              <span className="load-route-point">
+                <i className="route-dot route-dot--from" />
+                <span><small>مبدأ</small><b>{current.from}</b></span>
+              </span>
+              <span className="load-route-gap"><Icon name="arrow-left" size={14} /></span>
+              <span className="load-route-point">
+                <i className="route-dot route-dot--to" />
+                <span><small>مقصد</small><b>{current.to}</b></span>
+              </span>
             </div>
           )}
 
-          <div className="lh-answer">
-            <div className="lh-answer-row">
-              <div className="lh-timer" style={{ ["--timer-progress" as string]: `${progress}%` }}>
-                <span className="lh-timer-ring">
-                  <b>{seconds.toLocaleString("fa-IR")}</b>
-                  <small>ثانیه</small>
-                </span>
-                <div className="lh-timer-copy">
-                  <strong><Icon name="clock" size={13} /> پاسخ شما</strong>
-                  <p>تا تغییر بار بعدی فرصت داری؛ بعد از این زمان بار بعدی جای این یکی را می‌گیرد.</p>
-                </div>
-              </div>
-              <div className="lh-action-buttons">
-                <button
-                  className="lh-accept"
-                  type="button"
-                  disabled={!ready || !current}
-                  onClick={() => current && onAccept(current)}
-                >
-                  <Icon name="check" size={17} /> تأیید و گرفتن بار
-                </button>
-                <button
-                  className="lh-reject"
-                  type="button"
-                  disabled={!ready || !current}
-                  onClick={() => current && onReject(current)}
-                >
-                  <Icon name="close" size={16} /> رد کردن
-                </button>
-                <button
-                  className="lh-profile"
-                  type="button"
-                  disabled={!current}
-                  onClick={() => current && onProfile(current)}
-                >
-                  <Icon name="user" size={15} /> پروفایل
-                </button>
-              </div>
-            </div>
+          <div className="load-request-meta">
+            <span><Icon name="car" size={13} /> {current.car}</span>
+            <span dir="ltr"><Icon name="tag" size={12} /> {current.plate}</span>
+            <span><Icon name="route" size={13} /> {current.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
+            <span><Icon name="clock" size={13} /> ثبت {current.when}</span>
           </div>
-        </div>
-      </div>
+
+          <div className="load-request-map">
+            <LoadRequestMap lat={current.lat} lng={current.lng} label={current.customer} />
+            <span className="load-map-badge"><Icon name="pin" size={12} /> موقعیت امدادخواه</span>
+            <span
+              className="load-request-timer"
+              style={{ ["--timer-progress" as string]: `${progress}%` }}
+              aria-label={`${seconds} ثانیه تا بار بعدی`}
+            >
+              <b>{seconds.toLocaleString("fa-IR")}</b>
+              <small>ثانیه</small>
+            </span>
+          </div>
+
+          <footer className="load-request-actions">
+            <button
+              className="lh-accept"
+              type="button"
+              disabled={!ready}
+              onClick={() => onAccept(current)}
+            >
+              <Icon name="check" size={17} /> تأیید و گرفتن بار
+            </button>
+            <button
+              className="lh-cancel"
+              type="button"
+              disabled={!ready}
+              onClick={() => onReject(current)}
+            >
+              <Icon name="close" size={16} /> اعلام کنسلی
+            </button>
+          </footer>
+        </article>
+      )}
     </section>
   );
 }
@@ -343,7 +323,6 @@ export function HomeView({
   ready,
   pendingLoads,
   activeCount,
-  onToggleReady,
   onNavigate,
   onToast,
   onAcceptLoad,
@@ -356,7 +335,6 @@ export function HomeView({
   ready: boolean;
   pendingLoads: LoadOffer[];
   activeCount: number;
-  onToggleReady: () => void;
   onNavigate: (view: View) => void;
   onToast: (message: string) => void;
   onAcceptLoad: (load: LoadOffer) => void;
@@ -383,7 +361,6 @@ export function HomeView({
         ready={ready}
         loads={pendingLoads}
         activeCount={activeCount}
-        onToggleReady={onToggleReady}
         onNavigate={onNavigate}
         onAccept={onAcceptLoad}
         onReject={onRejectLoad}

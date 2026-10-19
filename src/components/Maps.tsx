@@ -228,3 +228,72 @@ export function UserPinMap({ lat, lng }: { lat: number; lng: number }) {
 
   return <div ref={containerRef} className="map-canvas" aria-label="موقعیت شما روی نقشه" />;
 }
+
+export function LoadRequestMap({
+  lat,
+  lng,
+  label,
+}: {
+  lat: number;
+  lng: number;
+  label?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const markerRef = useRef<import("leaflet").Marker | null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+
+    async function init() {
+      const L = (await import("leaflet")).default;
+      if (disposed || !containerRef.current || mapRef.current) return;
+      const map = L.map(containerRef.current, {
+        center: [lat, lng],
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        touchZoom: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        preferCanvas: true,
+      });
+      L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTR, crossOrigin: true }).addTo(map);
+      const icon = L.divIcon({
+        className: "leaflet-request-pin",
+        html: '<span class="leaflet-request-pulse"></span><span class="leaflet-request-dot"></span>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+      markerRef.current = L.marker([lat, lng], { icon, keyboard: false, interactive: false }).addTo(map);
+      mapRef.current = map;
+      window.setTimeout(() => map.invalidateSize(), 220);
+      window.setTimeout(() => map.setView([lat, lng], 15, { animate: false }), 260);
+    }
+
+    init();
+    return () => {
+      disposed = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+    // the map is created once; position updates are handled below
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    markerRef.current?.setLatLng([lat, lng]);
+    mapRef.current?.setView([lat, lng], 15, { animate: true, duration: 0.6 });
+  }, [lat, lng]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="map-canvas load-map-canvas"
+      role="img"
+      aria-label={label ? `موقعیت ${label} روی نقشه` : "موقعیت امدادخواه روی نقشه"}
+    />
+  );
+}

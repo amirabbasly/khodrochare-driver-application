@@ -176,7 +176,6 @@ function LoadHero({
   onNavigate,
   onAccept,
   onReject,
-  onProfile,
 }: {
   ready: boolean;
   loads: LoadOffer[];
@@ -184,7 +183,6 @@ function LoadHero({
   onNavigate: (view: View) => void;
   onAccept: (load: LoadOffer) => void;
   onReject: (load: LoadOffer) => void;
-  onProfile: (load: LoadOffer) => void;
 }) {
   const total = loads.length;
   const [tick, setTick] = useState(0);
@@ -239,19 +237,7 @@ function LoadHero({
           <header className="load-request-summary">
             <div className="load-request-person">
               <Avatar name={current.customer} tone={current.tone} />
-              <div>
-                <strong>{current.customer}</strong>
-                <small><Icon name="shield" size={12} /> {current.role} · ★ {current.rating.toLocaleString("fa-IR")}</small>
-              </div>
-              <button
-                className="load-request-profile"
-                type="button"
-                onClick={() => onProfile(current)}
-                aria-label="پروفایل امدادخواه"
-                title="پروفایل امدادخواه"
-              >
-                <Icon name="user" size={15} />
-              </button>
+              <strong className="load-request-name">{current.customer}</strong>
             </div>
 
             <span className="load-request-price">
@@ -327,7 +313,6 @@ export function HomeView({
   onToast,
   onAcceptLoad,
   onRejectLoad,
-  onProfile,
   onOpenPart,
   onOpenService,
 }: {
@@ -339,7 +324,6 @@ export function HomeView({
   onToast: (message: string) => void;
   onAcceptLoad: (load: LoadOffer) => void;
   onRejectLoad: (load: LoadOffer) => void;
-  onProfile: (load: LoadOffer) => void;
   onOpenPart: (key: PartKey) => void;
   onOpenService: (service: DriverService) => void;
 }) {
@@ -364,7 +348,6 @@ export function HomeView({
         onNavigate={onNavigate}
         onAccept={onAcceptLoad}
         onReject={onRejectLoad}
-        onProfile={onProfile}
       />
 
       <section className="main-services-section">

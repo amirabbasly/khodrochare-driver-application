@@ -402,7 +402,6 @@ export default function Dashboard() {
           onToast={notify}
           onAcceptLoad={acceptLoad}
           onRejectLoad={rejectLoad}
-          onProfile={(load) => setCustomerSheet(load)}
           onOpenPart={openPart}
           onOpenService={openService}
         />
@@ -456,7 +455,6 @@ export default function Dashboard() {
           onToast={notify}
           onAcceptLoad={acceptLoad}
           onRejectLoad={rejectLoad}
-          onProfile={(load) => setCustomerSheet(load)}
           onOpenPart={openPart}
           onOpenService={openService}
         />

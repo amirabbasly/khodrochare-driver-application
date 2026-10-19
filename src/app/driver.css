@@ -1139,51 +1139,13 @@
   min-width: 0;
 }
 
-.load-request-person > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.load-request-person strong {
+.load-request-name {
   overflow: hidden;
   color: #2f4857;
   font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   text-overflow: ellipsis;
-}
-
-.load-request-person small {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #94a1a7;
-  font-size: 8.5px;
-  white-space: nowrap;
-}
-
-.load-request-person small svg {
-  color: #68a88b;
-}
-
-.load-request-profile {
-  width: 28px;
-  height: 28px;
-  display: grid;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #e9eef0;
-  border-radius: 9px;
-  color: #8798a1;
-  background: #fff;
-  transition: border-color 150ms ease, color 150ms ease;
-}
-
-.load-request-profile:hover {
-  border-color: #f0c8a9;
-  color: #c4703a;
 }
 
 .load-request-price {
@@ -9656,5 +9618,401 @@
 
   .main-services-grid.parts-row .part-cat-card strong {
     font-size: 7.6px;
+  }
+}
+
+/* ═══════════════ IRAN SHAHR · single load board ═══════════════ */
+.hall-composer {
+  padding: 16px;
+  border: 1px solid #e8edf0;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 10px 26px rgba(20, 45, 60, 0.05);
+}
+
+.hall-composer .composer-head {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+}
+
+.hall-composer .composer-head textarea {
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 12px;
+  border: 1px solid #e9eef0;
+  border-radius: 13px;
+  color: #354d5a;
+  background: #f8fafb;
+  font-family: inherit;
+  font-size: 10.5px;
+  line-height: 1.9;
+  resize: vertical;
+}
+
+.hall-composer .composer-head textarea:focus {
+  border-color: #f2c4a4;
+  outline: 0;
+  background: #fff;
+}
+
+.hall-composer .composer-fields {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.hall-composer .composer-fields label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 9px;
+  border: 1px solid #eaeff1;
+  border-radius: 10px;
+  background: #f8fafb;
+}
+
+.hall-composer .composer-fields label svg {
+  flex: 0 0 auto;
+  color: #9aa8b0;
+}
+
+.hall-composer .composer-fields input {
+  width: 100%;
+  height: 36px;
+  border: 0;
+  outline: 0;
+  color: #3d5561;
+  background: transparent;
+  font-family: inherit;
+  font-size: 9.5px;
+}
+
+.hall-composer .composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 11px;
+}
+
+.hall-composer .composer-foot > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #9aa6ac;
+  font-size: 8px;
+}
+
+.hall-composer .composer-foot > span svg {
+  color: #6ca78c;
+}
+
+.hall-composer .composer-foot button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 38px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(115deg, #ff9448, #ee6d1e);
+  box-shadow: 0 8px 18px rgba(238, 109, 30, 0.22);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.hall-board {
+  margin-top: 14px;
+}
+
+.hall-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 9px;
+  padding: 0 3px;
+}
+
+.hall-board-head strong {
+  color: #334c59;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hall-board-head span {
+  color: #9aa6ac;
+  font-size: 8.5px;
+}
+
+.hall-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+/* every load in the hall shares exactly the same card */
+.hall-post {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 13px;
+  border: 1px solid #e9eef1;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(20, 45, 60, 0.04);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.hall-post:hover {
+  border-color: #f1d6c2;
+  box-shadow: 0 12px 26px rgba(20, 45, 60, 0.07);
+}
+
+.hall-post.is-mine {
+  border-color: #d9ece3;
+  background: linear-gradient(180deg, #ffffff, #f8fdfa);
+}
+
+.hall-post-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hall-post-author {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.hall-post-author strong {
+  overflow: hidden;
+  color: #2f4857;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hall-post-author small {
+  color: #9aa6ac;
+  font-size: 8px;
+}
+
+.hall-free-badge,
+.hall-mine-badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 7.5px;
+  white-space: nowrap;
+}
+
+.hall-free-badge {
+  color: #3d8b68;
+  background: #eef8f3;
+}
+
+.hall-free-badge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #4aac80;
+}
+
+.hall-mine-badge {
+  color: #a5722f;
+  background: #fdf5e9;
+}
+
+.hall-post-note {
+  margin: 0;
+  color: #5c6f79;
+  font-size: 9.5px;
+  line-height: 1.95;
+}
+
+.hall-post-route {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid #eff3f4;
+  border-radius: 11px;
+  background: #f8fafb;
+}
+
+.hall-route-stop {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.hall-route-stop > span {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.hall-route-stop small {
+  color: #a2adb2;
+  font-size: 7px;
+}
+
+.hall-route-stop b {
+  overflow: hidden;
+  color: #3a525f;
+  font-size: 9.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hall-route-line {
+  display: inline-flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  color: #c3ced3;
+}
+
+.hall-post-price {
+  color: #2f7d59;
+  font-size: 9.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.hall-post-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.hall-post-meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 7px;
+  border-radius: 7px;
+  color: #84939a;
+  background: #f4f8f9;
+  font-size: 8px;
+}
+
+.hall-post-foot {
+  display: flex;
+  margin-top: auto;
+  padding-top: 2px;
+}
+
+.hall-take,
+.hall-complete {
+  width: 100%;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  border-radius: 10px;
+  font-size: 9.5px;
+  font-weight: 600;
+  transition: transform 150ms ease, filter 150ms ease, background 150ms ease;
+}
+
+.hall-take {
+  border: 0;
+  color: #fff;
+  background: linear-gradient(115deg, #4fb189, #34906c);
+  box-shadow: 0 7px 15px rgba(52, 144, 108, 0.18);
+}
+
+.hall-take:hover {
+  transform: translateY(-1px);
+  filter: saturate(1.06);
+}
+
+.hall-complete {
+  border: 1px solid #e2e9ec;
+  color: #47707f;
+  background: #f4f9fa;
+}
+
+.hall-complete:hover {
+  transform: translateY(-1px);
+  border-color: #cfe2da;
+  color: #2f7d59;
+  background: #eef8f2;
+}
+
+.hall-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 34px 20px;
+  border: 1px dashed #dde6ea;
+  border-radius: 18px;
+  background: #fbfdfd;
+  text-align: center;
+}
+
+.hall-empty > span {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 4px;
+  border-radius: 14px;
+  color: #c47a41;
+  background: #fff4ea;
+}
+
+.hall-empty strong {
+  color: #3f5865;
+  font-size: 11px;
+}
+
+.hall-empty p {
+  margin: 0;
+  color: #98a5ab;
+  font-size: 9px;
+}
+
+@media (max-width: 860px) {
+  .hall-composer .composer-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hall-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hall-composer {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .hall-composer .composer-foot > span {
+    display: none;
+  }
+
+  .hall-composer .composer-foot button {
+    width: 100%;
+    justify-content: center;
   }
 }

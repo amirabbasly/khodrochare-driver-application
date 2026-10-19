@@ -205,7 +205,10 @@ function LoadHero({
   return (
     <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار و آمادگی دریافت بار">
       <div className="load-hero-top">
-        <div className="lh-top-head">
+        <div className="lh-panel-head lh-panel-head--load">
+          <span className="lh-panel-index">۱</span>
+          <strong>درخواست بار</strong>
+          <small className="lh-panel-hint">اطلاعات آخرین بار آزاد</small>
           <span className="lh-live"><i /> آخرین بار</span>
           <span className="lh-counter">
             {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
@@ -265,6 +268,11 @@ function LoadHero({
 
       <div className="load-hero-grid">
         <div className={`lh-ready${ready ? " is-on" : ""}`}>
+          <div className="lh-panel-head lh-panel-head--ready">
+            <span className="lh-panel-index">۲</span>
+            <strong>وضعیت آمادگی</strong>
+            <small className="lh-panel-hint">کلید روشن/خاموش دریافت بار</small>
+          </div>
           <div className="lh-ready-top">
             <span className="lh-ready-icon"><Icon name="power" size={20} /></span>
             <button
@@ -287,6 +295,11 @@ function LoadHero({
         </div>
 
         <div className="lh-actions">
+          <div className="lh-panel-head lh-panel-head--answer">
+            <span className="lh-panel-index">۳</span>
+            <strong>پاسخ شما</strong>
+            <small className="lh-panel-hint">فقط برای همین بار</small>
+          </div>
           <div className="lh-timer" style={{ ["--timer-progress" as string]: `${progress}%` }}>
             <span className="lh-timer-ring">
               <b>{seconds.toLocaleString("fa-IR")}</b>

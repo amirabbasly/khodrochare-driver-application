@@ -23,7 +23,7 @@ import {
 } from "@/components/driver/shared";
 
 const SESSION_KEY = "khodrochare_session_v1";
-const READY_KEY = "khodrochare_readiness_v1";
+const READY_KEY = "khodrochare_readiness_v2";
 
 const defaultSession: DriverSession = {
   name: "آرمان رضایی",
@@ -233,7 +233,7 @@ export default function Dashboard() {
   const [toast, setToast] = useState("");
   const [session, setSession] = useState<DriverSession>(defaultSession);
   const [balance, setBalance] = useState(1250000);
-  const [ready, setReady] = useState(true);
+  const [ready, setReady] = useState(false);
   const [loads, setLoads] = useState<LoadOffer[]>(seedLoads);
   const [activeLoad, setActiveLoad] = useState<LoadOffer | null>(seedLoads.find((load) => load.status === "active") ?? null);
   const [partFilter, setPartFilter] = useState<PartKey | "all">("all");

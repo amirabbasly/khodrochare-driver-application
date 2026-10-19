@@ -4,44 +4,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { login, register, saveSession, normalizePhone, uploadDocument, errorMessage } from "@/lib/api";
 import { BrandLogo, Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
 import { IranFlag, providerServices, vehicleSuggestions } from "@/components/driver/shared";
 
-const USERS_KEY = "khodrochare_users_v1";
-const SESSION_KEY = "khodrochare_session_v1";
-const ADMIN_USERNAME = "admin";
-const ADMIN_PASSWORD = "Chareh1404!";
-
 const PLATE_LETTERS = ["ب", "ج", "د", "س", "ص", "ط", "ع", "ق", "ل", "م", "ن", "و", "ه", "ی"];
 
-type LocalUser = {
-  name: string;
-  username: string;
-  phone?: string;
-  password: string;
-  vehicleType?: string;
-  plate?: string;
-  nationalCode?: string;
-  documentName?: string;
-  services?: string[];
-  role?: string;
-};
-
-const faDigits = (value: string) => value.replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
 
 function toLatinDigits(value: string) {
   return value
     .replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit)))
     .replace(/[٠-٩]/g, (digit) => String("٠١٢٣٤٥٦٧٨٩".indexOf(digit)));
-}
-
-function normalizePhone(value: string) {
-  let digits = toLatinDigits(value).replace(/\D/g, "");
-  if (digits.startsWith("0098")) digits = `0${digits.slice(4)}`;
-  else if (digits.startsWith("98")) digits = `0${digits.slice(2)}`;
-  else if (digits.length === 10 && digits.startsWith("9")) digits = `0${digits}`;
-  return digits;
 }
 
 function normalizeNationalCode(value: string) {
@@ -56,27 +30,6 @@ function isValidNationalCode(code: string) {
     .reduce((total, digit, index) => total + Number(digit) * (10 - index), 0);
   const remainder = sum % 11;
   return (remainder < 2 ? remainder : 11 - remainder) === Number(code[9]);
-}
-
-function readUsers(): LocalUser[] {
-  try {
-    const value = localStorage.getItem(USERS_KEY);
-    const parsed: unknown = value ? JSON.parse(value) : [];
-    return Array.isArray(parsed) ? (parsed as LocalUser[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function storeSession(session: Record<string, unknown>, remember: boolean) {
-  const payload = JSON.stringify(session);
-  if (remember) {
-    localStorage.setItem(SESSION_KEY, payload);
-    sessionStorage.removeItem(SESSION_KEY);
-  } else {
-    sessionStorage.setItem(SESSION_KEY, payload);
-    localStorage.removeItem(SESSION_KEY);
-  }
 }
 
 function AuthVisual({ variant = "login" }: { variant?: "login" | "register" }) {
@@ -323,7 +276,7 @@ function DocumentUpload({
         <input
           ref={inputRef}
           type="file"
-          accept="image/png,image/jpeg,image/webp,application/pdf"
+          accept="image/png,image/jpeg"
           hidden
           onChange={(event) => {
             handleFiles(event.target.files);
@@ -375,7 +328,7 @@ function DocumentUpload({
           <>
             <span className="doc-upload-icon"><Icon name="upload" size={22} /></span>
             <strong>تصویر مدرک را اینجا رها کن</strong>
-            <small>یا برای انتخاب فایل کلیک کن · JPG، PNG یا PDF تا ۵ مگابایت</small>
+            <small>یا برای انتخاب فایل کلیک کن · JPG یا PNG تا ۵ مگابایت</small>
             <span className="doc-upload-cta">انتخاب فایل <Icon name="plus" size={13} /></span>
           </>
         )}
@@ -394,43 +347,17 @@ export function LoginScreen() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [busy, setBusy] = useState(false);
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError("");
-    setNotice("");
-    const normalizedUsername = username.trim().toLowerCase();
-
-    if (normalizedUsername === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      storeSession({ name: "مدیر خودرو چاره", username: ADMIN_USERNAME, wallet: "۱۰٬۰۰۰٬۰۰۰", role: "admin" }, remember);
-      router.push("/home");
-      return;
-    }
-
-    const normalizedPhone = normalizePhone(username);
-    const user = readUsers().find((item) => {
-      const storedUsername = item.username.trim().toLowerCase();
-      const storedPhone = normalizePhone(item.phone || item.username);
-      const identifierMatches = storedUsername === normalizedUsername
-        || (/^09\d{9}$/.test(normalizedPhone) && storedPhone === normalizedPhone);
-      return identifierMatches && item.password === password;
-    });
-    if (!user) {
-      setError("شماره تماس یا رمز عبور درست نیست. اگر حساب نداری، ثبت‌نام کن.");
-      return;
-    }
-    storeSession({
-      name: user.name,
-      username: user.username,
-      phone: user.phone || (user.username.startsWith("09") ? user.username : ""),
-      wallet: "۰",
-      role: user.role || "driver",
-      vehicleType: user.vehicleType,
-      plate: user.plate,
-      nationalCode: user.nationalCode,
-      documentName: user.documentName,
-      services: user.services ?? [],
-    }, remember);
-    router.push("/home");
+    if (busy) return;
+    setError(""); setNotice(""); setBusy(true);
+    try {
+      const session = await login(username, password);
+      saveSession(session, remember);
+      router.replace("/home");
+    } catch (error) { setError(errorMessage(error)); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -452,7 +379,7 @@ export function LoginScreen() {
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
             {notice && <p className="form-notice" role="status">{notice}</p>}
-            <button className="primary-button auth-submit" type="submit">ورود به حساب <Icon name="arrow-left" size={18} /></button>
+            <button className="primary-button auth-submit" type="submit" disabled={busy} aria-busy={busy}>ورود به حساب <Icon name="arrow-left" size={18} /></button>
           </form>
           <p className="auth-switch">حساب کاربری نداری؟ <Link href="/register">ثبت‌نام ناوگان</Link></p>
           <p className="auth-legal">با ورود، <a href="#terms">قوانین و مقررات خودرو چاره</a> را می‌پذیری.</p>
@@ -484,6 +411,7 @@ export function RegisterScreen() {
   }, [docPreview]);
 
   function pickDocument(file: File) {
+    if (!["image/jpeg", "image/png"].includes(file.type)) { setError("فقط تصویر JPG یا PNG قابل ارسال است."); return; }
     if (file.size > 5 * 1024 * 1024) {
       setError("حجم تصویر مدرک نباید بیشتر از ۵ مگابایت باشد.");
       return;
@@ -500,8 +428,10 @@ export function RegisterScreen() {
     setDocPreview("");
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [busy, setBusy] = useState(false);
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (busy) return;
     setError("");
 
     if (name.trim().split(/\s+/).filter(Boolean).length < 2) {
@@ -533,44 +463,20 @@ export function RegisterScreen() {
       setError("شماره تماس معتبر وارد کن؛ مانند ۰۹۱۲۳۴۵۶۷۸۹.");
       return;
     }
-    if (password.length < 6) {
-      setError("رمز عبور باید دست‌کم ۶ کاراکتر باشد.");
+    if (password.length < 8) {
+      setError("رمز عبور باید دست‌کم ۸ کاراکتر باشد.");
       return;
     }
 
-    const users = readUsers();
-    if (users.some((item) => normalizePhone(item.phone || item.username) === normalizedPhone)) {
-      setError("این شماره تماس قبلاً ثبت شده است. وارد شو یا شمارهٔ دیگری وارد کن.");
-      return;
-    }
-
-    const plateText = `${faDigits(plate.two)} ${plate.letter} ${faDigits(plate.three)} - ${faDigits(plate.province)}`;
-    const user: LocalUser = {
-      name: name.trim(),
-      username: normalizedPhone,
-      phone: normalizedPhone,
-      password,
-      vehicleType: vehicleType.trim(),
-      plate: plateText,
-      nationalCode,
-      documentName: docFile.name,
-      services,
-      role: "driver",
-    };
-    storeSession({
-      name: user.name,
-      username: user.username,
-      phone: user.phone,
-      wallet: "۰",
-      role: "driver",
-      vehicleType: user.vehicleType,
-      plate: user.plate,
-      nationalCode: user.nationalCode,
-      documentName: user.documentName,
-      services: user.services ?? [],
-    }, true);
-    localStorage.setItem(USERS_KEY, JSON.stringify([...users, user]));
-    router.push("/home");
+    setBusy(true);
+    try {
+      const identityDocument = await uploadDocument(docFile);
+      const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
+      const session = await register({ fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
+      saveSession(session, true);
+      router.replace("/home");
+    } catch (error) { setError(errorMessage(error)); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -668,7 +574,7 @@ export function RegisterScreen() {
               </div>
               <div className="register-grid">
                 <Field label="شماره تماس" name="phone" type="tel" value={phone} onChange={setPhone} placeholder="۰۹۱۲۳۴۵۶۷۸۹" autoComplete="tel" inputMode="tel" minLength={10} maxLength={16} ltr />
-                <Field label="رمز عبور" name="new-password" type="password" value={password} onChange={setPassword} placeholder="حداقل ۶ کاراکتر" autoComplete="new-password" minLength={6} showToggle visible={passwordVisible} onToggle={() => setPasswordVisible((current) => !current)} />
+                <Field label="رمز عبور" name="new-password" type="password" value={password} onChange={setPassword} placeholder="حداقل ۸ کاراکتر" autoComplete="new-password" minLength={8} showToggle visible={passwordVisible} onToggle={() => setPasswordVisible((current) => !current)} />
               </div>
               <label className="check-label register-consent">
                 <input type="checkbox" defaultChecked required />
@@ -678,7 +584,7 @@ export function RegisterScreen() {
             </section>
 
             {error && <p className="form-error register-error" role="alert">{error}</p>}
-            <button className="primary-button auth-submit" type="submit">تکمیل ثبت‌نام و ورود <Icon name="arrow-left" size={18} /></button>
+            <button className="primary-button auth-submit" type="submit" disabled={busy} aria-busy={busy}>تکمیل ثبت‌نام و ورود <Icon name="arrow-left" size={18} /></button>
           </form>
           <p className="auth-switch">قبلاً ثبت‌نام کرده‌ای؟ <Link href="/">وارد شو</Link></p>
         </section>

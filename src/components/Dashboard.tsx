@@ -2,6 +2,9 @@
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
+import { logout as backendLogout, errorMessage } from "@/lib/api";
+import { useAuthenticatedUser } from "@/lib/use-backend";
+import { useDriverFeed } from "@/lib/use-driver-feed";
 import { BrandLogo, Icon, type IconName } from "@/components/Icons";
 import { AiMascot } from "@/components/Artwork";
 import { HomeView } from "@/components/driver/HomeView";
@@ -13,8 +16,6 @@ import {
   Avatar,
   PageTitle,
   SectionTitle,
-  seedLoads,
-  type DriverPost,
   type DriverService,
   type DriverSession,
   type LoadOffer,
@@ -22,20 +23,7 @@ import {
   type View,
 } from "@/components/driver/shared";
 
-const SESSION_KEY = "khodrochare_session_v1";
 const READY_KEY = "khodrochare_readiness_v2";
-
-const defaultSession: DriverSession = {
-  name: "آرمان رضایی",
-  username: "arman",
-  phone: "۰۹۱۲۳۴۵۶۷۸۹",
-  wallet: "۱۲۵۰۰۰۰",
-  role: "driver",
-  vehicleType: "یدک‌کش / جرثقیل",
-  plate: "۱۲ ب ۳۴۵ - ۶۷",
-  nationalCode: "۰۰۱۲۳۴۵۶۷۸",
-  services: ["repair", "transport", "carwash", "inspection", "maintenance"],
-};
 
 const bottomItems: { label: string; view: View; icon: IconName }[] = [
   { label: "خانه", view: "home", icon: "home" },
@@ -84,34 +72,8 @@ const drawerGroups: { label: string; items: { label: string; view: View; icon: I
 
 const faL = (value: string) => value.replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))).replace(/[٬،,\s]/g, "");
 
-function normalizePhoneNumber(value: string) {
-  let digits = value.replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))).replace(/\D/g, "");
-  if (digits.startsWith("0098")) digits = `0${digits.slice(4)}`;
-  else if (digits.startsWith("98")) digits = `0${digits.slice(2)}`;
-  else if (digits.length === 10 && digits.startsWith("9")) digits = `0${digits}`;
-  return digits;
-}
-
 function formatMoney(value: number) {
   return `${Math.max(0, value).toLocaleString("fa-IR")} تومان`;
-}
-
-function readStoredSession(): DriverSession | null {
-  try {
-    const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-    return raw ? JSON.parse(raw) as DriverSession : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredSession(session: DriverSession) {
-  try {
-    const storage = localStorage.getItem(SESSION_KEY) ? localStorage : sessionStorage;
-    storage.setItem(SESSION_KEY, JSON.stringify(session));
-  } catch {
-    /* Local-only prototype. */
-  }
 }
 
 function WalletView({ balance, onAdd, onBack }: { balance: number; onAdd: (amount: number) => void; onBack: () => void }) {
@@ -231,31 +193,23 @@ export default function Dashboard() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [toast, setToast] = useState("");
-  const [session, setSession] = useState<DriverSession>(defaultSession);
-  const [balance, setBalance] = useState(1250000);
+  const user = useAuthenticatedUser();
+  const serviceIds = { REPAIR: "repair", TOWING: "transport", MOBILE_CARWASH: "carwash", PERIODIC_SERVICE: "maintenance", INSPECTION: "inspection" };
+  const session: DriverSession = { name: user?.fullName || "سفیر خودرو چاره", username: user?.phone, phone: user?.phone, nationalCode: user?.nationalId, plate: user?.vehiclePlate, vehicleType: user?.vehicleType, services: user?.services.map(code => serviceIds[code]), documentName: user?.identityDocumentId ? "مدرک هویتی ثبت‌شده" : undefined };
+  const [balance] = useState(0);
   const [ready, setReady] = useState(false);
-  const [loads, setLoads] = useState<LoadOffer[]>(seedLoads);
-  const [activeLoad, setActiveLoad] = useState<LoadOffer | null>(seedLoads.find((load) => load.status === "active") ?? null);
+  const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
+  const [rejectedIds, setRejectedIds] = useState<string[]>([]);
+  const feed = useDriverFeed(ready, notify);
+  const loads = feed.loads.filter(load => load.status !== "pending" || !rejectedIds.includes(load.id));
+  const activeLoad = loads.find(load => load.id === selectedLoadId) || feed.active;
   const [partFilter, setPartFilter] = useState<PartKey | "all">("all");
   const [techServiceId, setTechServiceId] = useState<string>("insurance");
   const [customerSheet, setCustomerSheet] = useState<LoadOffer | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const stored = readStoredSession();
-      if (stored) {
-        setSession((current) => ({ ...current, ...stored }));
-        if (stored.wallet !== undefined) {
-          const value = Number(faL(stored.wallet));
-          if (!Number.isNaN(value)) setBalance(value);
-        }
-      }
-      try {
-        const readyValue = localStorage.getItem(READY_KEY);
-        if (readyValue !== null) setReady(readyValue === "1");
-      } catch {
-        /* Ignore storage restrictions. */
-      }
+      try { setReady(localStorage.getItem(READY_KEY) === "1"); } catch {}
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -297,92 +251,24 @@ export default function Dashboard() {
     notify(next ? "آمادگی فعال شد؛ بارهای جدید به تو پیشنهاد می‌شود." : "آمادگی غیرفعال شد؛ دیگر باری نمایش داده نمی‌شود.");
   }
 
-  function acceptLoad(load: LoadOffer) {
-    const accepted: LoadOffer = { ...load, status: "active" };
-    setLoads((current) => current.map((item) => item.id === load.id ? accepted : item));
-    setActiveLoad(accepted);
-    navigate("job");
-    notify(`بار ${load.customer} تأیید شد؛ جزئیات مسیر را ببین.`);
+  async function acceptLoad(load: LoadOffer) {
+    if (await feed.accept(load)) { setSelectedLoadId(load.id); navigate("job"); notify("درخواست با موفقیت پذیرفته شد."); }
   }
-
   function rejectLoad(load: LoadOffer) {
-    setLoads((current) => current.filter((item) => item.id !== load.id));
-    notify("بار رد شد و برای امدادگر دیگری ارسال می‌شود.");
+    setRejectedIds(ids => [...ids, load.id]);
+    notify("این درخواست از فهرست شما کنار گذاشته شد.");
   }
-
-  function completeLoad(load: LoadOffer) {
-    setLoads((current) => current.map((item) => item.id === load.id ? { ...item, status: "done" } : item));
-    setActiveLoad(null);
-    navigate("loads");
-    notify("بار با موفقیت تحویل شد و مبلغ به کیف پول اضافه می‌شود.");
+  async function completeLoad(load: LoadOffer) {
+    await feed.status(load, "COMPLETED");
+    setSelectedLoadId(null); navigate("loads"); notify("پایان مأموریت در سرور ثبت شد.");
   }
-
-  function takePost(post: DriverPost) {
-    const load: LoadOffer = {
-      id: `load-${Date.now()}`,
-      customer: post.author,
-      role: post.role,
-      rating: 4.8,
-      tone: post.tone,
-      car: post.car,
-      plate: "—",
-      from: post.from,
-      to: post.to,
-      distanceKm: 10,
-      price: post.price,
-      when: post.when,
-      weight: post.weight,
-      note: post.note,
-      phone: "۰۹۱۲۰۰۰۰۰۰۰",
-      status: "active",
-      lat: 35.7575,
-      lng: 51.4104,
-    };
-    setLoads((current) => [load, ...current]);
-    setActiveLoad(load);
-    navigate("job");
-    notify("بار آزاد از تالار ایرانشهر تأیید شد.");
-  }
-
-  function addBalance(amount: number) {
-    const next = balance + amount;
-    setBalance(next);
-    const nextSession = { ...session, wallet: next.toLocaleString("fa-IR") };
-    setSession(nextSession);
-    writeStoredSession(nextSession);
-    notify("کیف پول شما با موفقیت شارژ شد.");
-  }
-
-  function saveProfile(name: string, phone: string, nationalCode: string) {
-    let nextSession: DriverSession = { ...session, name: name || session.name, phone, nationalCode };
-    const normalizedPhone = normalizePhoneNumber(phone);
-    if (session.username && /^09\d{9}$/.test(normalizedPhone) && session.role !== "admin") {
-      try {
-        const users = JSON.parse(localStorage.getItem("khodrochare_users_v1") || "[]") as { username: string; name?: string; phone?: string; nationalCode?: string }[];
-        const updated = users.map((user) => user.username === session.username
-          ? { ...user, name, username: normalizedPhone, phone: normalizedPhone, nationalCode }
-          : user);
-        localStorage.setItem("khodrochare_users_v1", JSON.stringify(updated));
-        nextSession = { ...nextSession, username: normalizedPhone, phone: normalizedPhone };
-      } catch {
-        /* Local-only prototype. */
-      }
-    }
-    setSession(nextSession);
-    writeStoredSession(nextSession);
-  }
-
-  function saveVehicle(vehicleType: string, plate: string, vehicleModel: string) {
-    const nextSession = { ...session, vehicleType, plate, vehicleModel };
-    setSession(nextSession);
-    writeStoredSession(nextSession);
-  }
-
-  function logout() {
-    localStorage.removeItem(SESSION_KEY);
-    sessionStorage.removeItem(SESSION_KEY);
-    setDrawerOpen(false);
-    router.push("/");
+  function takePost() { notify("ثبت بار از تالار ایرانشهر هنوز در سرور فعال نشده است."); }
+  function addBalance() { notify("پرداخت و کیف پول هنوز به سرور متصل نیست."); }
+  function saveProfile() { notify("ویرایش اطلاعات حساب هنوز در سرور فعال نشده است."); }
+  function saveVehicle() { notify("ویرایش خودروی امدادگر هنوز در سرور فعال نشده است."); }
+  async function logout() {
+    try { await backendLogout(); } catch (error) { notify(errorMessage(error)); }
+    finally { router.replace("/"); }
   }
 
   const userName = session.name || "سفیر خودرو چاره";
@@ -420,7 +306,7 @@ export default function Dashboard() {
           onToast={notify}
           onAccept={acceptLoad}
           onReject={rejectLoad}
-          onOpenJob={(load) => { setActiveLoad(load); navigate("job"); }}
+          onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }}
           onProfile={(load) => setCustomerSheet(load)}
         />
       );
@@ -428,8 +314,8 @@ export default function Dashboard() {
     case "readiness": content = <ReadinessView ready={ready} onToggle={toggleReady} onBack={() => navigate("home")} onToast={notify} />; break;
     case "job":
       content = activeLoad
-        ? <JobView load={activeLoad} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
-        : <LoadsView loads={loads} onBack={() => navigate("home")} onToast={notify} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setActiveLoad(load); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
+        ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
+        : <LoadsView loads={loads} onBack={() => navigate("home")} onToast={notify} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
       break;
     case "parts":
       content = <PartsView key={partFilter} initialPart={partFilter} onBack={() => navigate("home")} onToast={notify} />;

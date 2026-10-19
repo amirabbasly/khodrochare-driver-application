@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
+import { errorMessage, type Tracking } from "@/lib/api";
 import { UserPinMap } from "@/components/Maps";
 import { LoadOfferCard } from "@/components/driver/HomeView";
 import {
@@ -194,24 +195,31 @@ export function JobView({
   onBack,
   onToast,
   onComplete,
+  onArrive,
+  tracking,
   onOpenChat,
 }: {
   load: LoadOffer;
   onBack: () => void;
   onToast: (message: string) => void;
-  onComplete: (load: LoadOffer) => void;
+  onComplete: (load: LoadOffer) => Promise<void>;
+  onArrive: (load: LoadOffer) => Promise<void>;
+  tracking: Tracking;
   onOpenChat: () => void;
 }) {
-  const [step, setStep] = useState(load.status === "done" ? 4 : 1);
+  const [step, setStep] = useState(load.status === "done" ? 4 : load.serverStatus === "ARRIVED" ? 2 : 1);
 
-  function advance() {
-    if (step >= 4) {
-      onComplete(load);
-      return;
-    }
-    setStep((current) => current + 1);
-    const next = JOB_STEPS[step + 1];
-    onToast(`وضعیت بار به «${next}» تغییر کرد.`);
+  const [busy, setBusy] = useState(false);
+  async function advance() {
+    if (busy || load.status === "done") return;
+    setBusy(true);
+    try {
+      if (step >= 3) { await onComplete(load); setStep(4); return; }
+      if (step === 1 && load.serverStatus !== "ARRIVED") await onArrive(load);
+      setStep(current => current + 1);
+      onToast(`وضعیت مأموریت به «${JOB_STEPS[step + 1]}» تغییر کرد.`);
+    } catch (error) { onToast(errorMessage(error)); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -232,7 +240,7 @@ export function JobView({
               <small><Icon name="shield" size={12} /> {load.role} · ★ {load.rating.toLocaleString("fa-IR")}</small>
             </div>
             <div className="job-contact">
-              <button type="button" onClick={() => onToast(`تماس با ${load.customer} در حال برقراری است.`)} aria-label="تماس با مشتری"><Icon name="phone" size={17} /></button>
+              <button type="button" onClick={() => onToast("تماس با مشتری هنوز در سرور فعال نشده است.")} aria-label="تماس با مشتری"><Icon name="phone" size={17} /></button>
               <button type="button" onClick={onOpenChat} aria-label="گفت‌وگو"><Icon name="chat" size={17} /></button>
             </div>
           </div>
@@ -252,13 +260,13 @@ export function JobView({
           <div className="job-facts">
             <span><Icon name="car" size={14} /> {load.car}</span>
             <span><Icon name="briefcase" size={14} /> {load.weight}</span>
-            <span><Icon name="wallet" size={14} /> {formatToman(load.price)}</span>
+            <span><Icon name="wallet" size={14} /> {load.priceKnown === false ? "تعیین نشده" : formatToman(load.price)}</span>
           </div>
 
           <p className="job-note"><Icon name="chat" size={14} /> {load.note}</p>
 
           <div className="job-actions">
-            <button className="primary-button" type="button" onClick={advance} disabled={load.status === "done"}>
+            <button className="primary-button" type="button" onClick={advance} disabled={busy || load.status === "done"}>
               <Icon name={step >= 4 ? "check" : "navigation"} size={16} />
               {load.status === "done" ? "این بار تسویه شده است" : step >= 4 ? "پایان و تسویهٔ بار" : JOB_STEPS[step + 1]}
             </button>
@@ -274,9 +282,9 @@ export function JobView({
                 <strong>نقطهٔ بارگیری</strong>
                 <small>{load.from} · محدودهٔ تهران</small>
               </div>
-              <span className="map-frame-tag"><Icon name="route" size={12} /> {load.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
+              <span className="map-frame-tag"><Icon name="route" size={12} /> {tracking.distanceToOriginMeters === undefined ? "—" : (tracking.distanceToOriginMeters / 1000).toLocaleString("fa-IR", { maximumFractionDigits: 1 })} کیلومتر تا مبدأ</span>
             </div>
-            <div className="waiting-map"><UserPinMap lat={load.lat} lng={load.lng} /></div>
+            <div className="waiting-map"><UserPinMap lat={load.lat} lng={load.lng} driver={tracking.driver} /></div>
             <div className="map-frame-foot">
               <span><Icon name="shield" size={12} /> بار تأییدشدهٔ ناوگان</span>
               <span><Icon name="clock" size={12} /> حداکثر ۲ ساعت</span>

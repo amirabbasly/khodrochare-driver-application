@@ -195,9 +195,10 @@ export function TrackingMap({
   return <div ref={containerRef} className="map-canvas" />;
 }
 
-export function UserPinMap({ lat, lng }: { lat: number; lng: number }) {
+export function UserPinMap({ lat, lng, driver }: { lat: number; lng: number; driver?: { latitude: number; longitude: number } | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
+  const driverRef = useRef<import("leaflet").Marker | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -225,6 +226,22 @@ export function UserPinMap({ lat, lng }: { lat: number; lng: number }) {
       mapRef.current = null;
     };
   }, [lat, lng]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const update = async () => {
+      const L = await import("leaflet");
+      if (cancelled || !mapRef.current) return;
+      driverRef.current?.remove(); driverRef.current = null;
+      if (driver) {
+        driverRef.current = L.marker([driver.latitude, driver.longitude], { icon: rescuerPin(L) }).addTo(mapRef.current);
+        mapRef.current.fitBounds([[lat, lng], [driver.latitude, driver.longitude]], { padding: [35, 35], maxZoom: 15 });
+      }
+    };
+    void update();
+    const timer = window.setTimeout(update, 300);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [lat, lng, driver]);
 
   return <div ref={containerRef} className="map-canvas" aria-label="موقعیت شما روی نقشه" />;
 }

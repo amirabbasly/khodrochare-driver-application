@@ -154,7 +154,7 @@ export function LoadOfferCard({
         <span><Icon name="car" size={14} /> {load.car}</span>
         <span className="load-plate"><Icon name="tag" size={13} /> {load.plate}</span>
         <span><Icon name="clock" size={14} /> {load.when}</span>
-        <span className="load-price">{formatToman(load.price)}</span>
+        <span className="load-price">{load.priceKnown === false ? "تعیین نشده" : formatToman(load.price)}</span>
       </div>
       {!compact && <p className="load-note">{load.note}</p>}
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { api, getSession, uploadDocument, updateSessionUser, errorMessage, type User } from "@/lib/api";
 import { Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
 import {
@@ -75,7 +76,7 @@ export function ProfileView({
           <div className="profile-services">
             <span className="profile-services-label"><Icon name="briefcase" size={13} /> خدمات قابل ارائه</span>
             <div className="profile-services-chips">
-              {(session.services && session.services.length > 0 ? session.services : providerServices.map((service) => service.id)).map((id) => {
+              {(session.services || []).map((id) => {
                 const service = providerServices.find((item) => item.id === id);
                 return service ? <span key={id}>{service.name}</span> : null;
               })}
@@ -93,7 +94,7 @@ export function ProfileView({
             onSubmit={(event) => {
               event.preventDefault();
               onSave(fullName.trim(), phone.trim(), nationalCode.trim());
-              onToast("اطلاعات پروفایل ناوگان ذخیره شد.");
+
             }}
           >
             <label className="form-field"><span className="field-label">نام و نام خانوادگی</span><span className="field-control"><input value={fullName} onChange={(event) => setFullName(event.target.value)} required /></span></label>
@@ -164,7 +165,7 @@ export function VehicleView({
             event.preventDefault();
             onSave(vehicleType, plate, model);
             setEditing(false);
-            onToast("مشخصات خودروی ناوگان ذخیره شد.");
+
           }}
         >
           <SectionTitle title="ویرایش خودرو" caption="تغییرات بلافاصله در پروفایل ناوگان اعمال می‌شود." />
@@ -225,10 +226,35 @@ export function DocumentsView({
   onBack: () => void;
   onToast: (message: string) => void;
 }) {
-  const [uploaded, setUploaded] = useState<Record<string, boolean>>({ national: true, insurance: true });
+  const [saved, setUploaded] = useState<Record<string, boolean>>({});
+  const uploaded: Record<string, boolean> = { ...saved, national: saved.national || !!session.documentName };
+  const [busy, setBusy] = useState(false);
   const completed = DOCUMENTS.filter((document) => uploaded[document.id]).length;
   const percent = Math.round((completed / DOCUMENTS.length) * 100);
 
+  async function uploadIdentity(file: File, id: string) {
+    if (id !== "national") { onToast("ثبت این نوع مدرک هنوز در سرور فعال نشده است."); return; }
+    if (busy) return;
+    setBusy(true);
+    try {
+      const reference = await uploadDocument(file);
+      await api("/me/identity-document", { method: "POST", body: reference });
+      updateSessionUser(await api<User>("/me"));
+      setUploaded(current => ({ ...current, national: true }));
+      onToast("مدرک هویتی در سرور ثبت شد.");
+    } catch (error) { onToast(errorMessage(error)); }
+    finally { setBusy(false); }
+  }
+  async function downloadIdentity(id: string) {
+    const documentId = getSession()?.user.identityDocumentId;
+    if (id !== "national" || !documentId) { onToast("مدرکی برای نمایش در سرور ثبت نشده است."); return; }
+    try {
+      const file = await api<Blob>(`/documents/${documentId}`, { responseType: "blob" });
+      const url = URL.createObjectURL(file);
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = "identity-document"; anchor.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { onToast(errorMessage(error)); }
+  }
   return (
     <div className="subpage">
       <PageTitle title="مدارک و احراز هویت" subtitle="تکمیل مدارک، دریافت بارهای ویژه را فعال می‌کند" onBack={onBack} />
@@ -236,15 +262,15 @@ export function DocumentsView({
       <section className="doc-progress-card">
         <div className="doc-progress-head">
           <span className="doc-progress-icon"><Icon name="shield" size={24} /></span>
-          <div><small>وضعیت احراز هویت ناوگان</small><strong>{faDigits(String(completed))} از {faDigits(String(DOCUMENTS.length))} مدرک تأیید شد</strong></div>
+          <div><small>وضعیت احراز هویت ناوگان</small><strong>{faDigits(String(completed))} از {faDigits(String(DOCUMENTS.length))} مدرک ثبت شد</strong></div>
           <b>{percent.toLocaleString("fa-IR")}٪</b>
         </div>
         <div className="doc-progress-bar"><span style={{ width: `${percent}%` }} /></div>
-        <p>{percent === 100 ? "همهٔ مدارک تأیید شده‌اند؛ حساب ناوگان تو کامل است." : "برای فعال‌شدن همهٔ بارها، مدارک باقی‌مانده را بارگذاری کن."}</p>
+        <p>{percent === 100 ? "همهٔ مدارک ثبت شده‌اند؛ حساب ناوگان تو کامل است." : "برای فعال‌شدن همهٔ بارها، مدارک باقی‌مانده را بارگذاری کن."}</p>
       </section>
 
       <section className="panel-card document-list">
-        <SectionTitle title="مدارک من" caption="تصویر یا فایل PDF هر مدرک را بارگذاری کن." />
+        <SectionTitle title="مدارک من" caption="تصویر JPG یا PNG مدرک را بارگذاری کن." />
         {DOCUMENTS.map((document) => {
           const isReady = uploaded[document.id];
           return (
@@ -255,24 +281,23 @@ export function DocumentsView({
                 <small>{document.note}{document.id === "national" && session.documentName ? ` · ${session.documentName}` : ""}</small>
               </div>
               {isReady ? (
-                <span className="status-pill status-pill--done"><i />تأییدشده</span>
+                <span className="status-pill status-pill--done"><i />ثبت‌شده</span>
               ) : (
                 <label className="document-upload">
                   <input
                     type="file"
-                    accept="image/png,image/jpeg,image/webp,application/pdf"
+                    accept="image/png,image/jpeg" disabled={busy}
                     onChange={(event) => {
                       const file = event.target.files?.[0];
                       event.target.value = "";
                       if (!file) return;
-                      setUploaded((current) => ({ ...current, [document.id]: true }));
-                      onToast(`${document.title} بارگذاری شد و در صف بررسی است.`);
+                      void uploadIdentity(file, document.id);
                     }}
                   />
                   <Icon name="upload" size={14} /> بارگذاری
                 </label>
               )}
-              <button className="row-more" type="button" onClick={() => onToast(isReady ? "فایل مدرک نمایش داده می‌شود" : "برای مشاهده، ابتدا مدرک را بارگذاری کن")} aria-label="گزینه‌های مدرک"><Icon name="more" size={18} /></button>
+              <button className="row-more" type="button" onClick={() => void downloadIdentity(document.id)} aria-label="گزینه‌های مدرک"><Icon name="more" size={18} /></button>
             </article>
           );
         })}

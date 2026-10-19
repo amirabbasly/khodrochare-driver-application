@@ -57,6 +57,8 @@ export type PartCategory = {
 };
 
 export type LoadOffer = {
+  serverStatus?: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED";
+  priceKnown?: boolean;
   id: string;
   customer: string;
   role: string;

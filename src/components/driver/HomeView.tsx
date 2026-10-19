@@ -12,7 +12,6 @@ import {
   partCategories,
   moreServices,
   SectionTitle,
-  serviceLogs,
   type DriverService,
   type LoadOffer,
   type PartCategory,
@@ -204,68 +203,6 @@ function LoadHero({
 
   return (
     <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار و آمادگی دریافت بار">
-      <div className="load-hero-top">
-        <div className="lh-panel-head lh-panel-head--load">
-          <span className="lh-panel-index">۱</span>
-          <strong>درخواست بار</strong>
-          <small className="lh-panel-hint">اطلاعات آخرین بار آزاد</small>
-          <span className="lh-live"><i /> آخرین بار</span>
-          <span className="lh-counter">
-            {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
-          </span>
-          <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
-          <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
-            تالار ایرانشهر <Icon name="arrow-left" size={14} />
-          </button>
-        </div>
-
-        {!ready ? (
-          <div className="lh-top-empty">
-            <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
-            <div>
-              <strong>آمادگی دریافت بار غیرفعال است</strong>
-              <p>بارها تا وقتی آمادگی را فعال نکنی نمایش داده نمی‌شوند.</p>
-            </div>
-          </div>
-        ) : !current ? (
-          <div className="lh-top-empty lh-top-empty--calm">
-            <span className="lh-empty-icon"><Icon name="check" size={22} /></span>
-            <div>
-              <strong>بار آزادی در محدودهٔ تو نیست</strong>
-              <p>آمادگی‌ات فعال است؛ به‌محض ثبت بار جدید اینجا نمایش داده می‌شود.</p>
-            </div>
-          </div>
-        ) : (
-          <div className="lh-top-body">
-            <div className="lh-person">
-              <Avatar name={current.customer} tone={current.tone} />
-              <div>
-                <strong>{current.customer}</strong>
-                <small><Icon name="shield" size={12} /> {current.role} · ★ {current.rating.toLocaleString("fa-IR")}</small>
-              </div>
-            </div>
-
-            <div className="lh-route">
-              <span className="lh-stop"><i className="route-dot route-dot--from" /><span><small>مبدأ</small><b>{current.from}</b></span></span>
-              <span className="lh-route-line"><Icon name="arrow-left" size={13} /></span>
-              <span className="lh-stop"><i className="route-dot route-dot--to" /><span><small>مقصد</small><b>{current.to}</b></span></span>
-            </div>
-
-            <div className="lh-facts">
-              <span><Icon name="car" size={13} /> {current.car}</span>
-              <span dir="ltr"><Icon name="tag" size={12} /> {current.plate}</span>
-              <span><Icon name="route" size={13} /> {current.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
-              <span><Icon name="clock" size={13} /> {current.when}</span>
-            </div>
-
-            <div className="lh-price">
-              <small>کرایهٔ بار</small>
-              <b>{formatToman(current.price)}</b>
-            </div>
-          </div>
-        )}
-      </div>
-
       <div className="load-hero-grid">
         <div className={`lh-ready${ready ? " is-on" : ""}`}>
           <div className="lh-panel-head lh-panel-head--ready">
@@ -294,74 +231,109 @@ function LoadHero({
           </div>
         </div>
 
-        <div className="lh-actions">
-          <div className="lh-panel-head lh-panel-head--answer">
-            <span className="lh-panel-index">۳</span>
-            <strong>پاسخ شما</strong>
-            <small className="lh-panel-hint">فقط برای همین بار</small>
-          </div>
-          <div className="lh-timer" style={{ ["--timer-progress" as string]: `${progress}%` }}>
-            <span className="lh-timer-ring">
-              <b>{seconds.toLocaleString("fa-IR")}</b>
-              <small>ثانیه</small>
+        <div className="load-hero-main">
+          <div className="lh-panel-head lh-panel-head--load">
+            <span className="lh-panel-index">۱</span>
+            <strong>آخرین بار</strong>
+            <small className="lh-panel-hint">درخواست بار و پاسخ شما</small>
+            <span className="lh-live"><i /> بار آزاد</span>
+            <span className="lh-counter">
+              {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
             </span>
-            <div className="lh-timer-copy">
-              <strong>زمان تصمیم‌گیری</strong>
-              <p>تا تغییر بار بعدی؛ بعد از این زمان بار بعدی جای این یکی را می‌گیرد.</p>
-            </div>
+            <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
+            <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
+              تالار ایرانشهر <Icon name="arrow-left" size={14} />
+            </button>
           </div>
-          <div className="lh-action-buttons">
-            <button
-              className="lh-accept"
-              type="button"
-              disabled={!ready || !current}
-              onClick={() => current && onAccept(current)}
-            >
-              <Icon name="check" size={17} /> تأیید و گرفتن بار
-            </button>
-            <button
-              className="lh-reject"
-              type="button"
-              disabled={!ready || !current}
-              onClick={() => current && onReject(current)}
-            >
-              <Icon name="close" size={16} /> رد کردن
-            </button>
-            <button
-              className="lh-profile"
-              type="button"
-              disabled={!current}
-              onClick={() => current && onProfile(current)}
-            >
-              <Icon name="user" size={15} /> پروفایل
-            </button>
+
+          {!ready ? (
+            <div className="lh-top-empty">
+              <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
+              <div>
+                <strong>آمادگی دریافت بار غیرفعال است</strong>
+                <p>بارها تا وقتی آمادگی را فعال نکنی نمایش داده نمی‌شوند.</p>
+              </div>
+            </div>
+          ) : !current ? (
+            <div className="lh-top-empty lh-top-empty--calm">
+              <span className="lh-empty-icon"><Icon name="check" size={22} /></span>
+              <div>
+                <strong>بار آزادی در محدودهٔ تو نیست</strong>
+                <p>آمادگی‌ات فعال است؛ به‌محض ثبت بار جدید اینجا نمایش داده می‌شود.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="lh-top-body">
+              <div className="lh-person">
+                <Avatar name={current.customer} tone={current.tone} />
+                <div>
+                  <strong>{current.customer}</strong>
+                  <small><Icon name="shield" size={12} /> {current.role} · ★ {current.rating.toLocaleString("fa-IR")}</small>
+                </div>
+              </div>
+
+              <div className="lh-route">
+                <span className="lh-stop"><i className="route-dot route-dot--from" /><span><small>مبدأ</small><b>{current.from}</b></span></span>
+                <span className="lh-route-line"><Icon name="arrow-left" size={13} /></span>
+                <span className="lh-stop"><i className="route-dot route-dot--to" /><span><small>مقصد</small><b>{current.to}</b></span></span>
+              </div>
+
+              <div className="lh-price">
+                <small>کرایهٔ بار</small>
+                <b>{formatToman(current.price)}</b>
+              </div>
+
+              <div className="lh-facts">
+                <span><Icon name="car" size={13} /> {current.car}</span>
+                <span dir="ltr"><Icon name="tag" size={12} /> {current.plate}</span>
+                <span><Icon name="route" size={13} /> {current.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
+                <span><Icon name="clock" size={13} /> {current.when}</span>
+              </div>
+            </div>
+          )}
+
+          <div className="lh-answer">
+            <div className="lh-answer-row">
+              <div className="lh-timer" style={{ ["--timer-progress" as string]: `${progress}%` }}>
+                <span className="lh-timer-ring">
+                  <b>{seconds.toLocaleString("fa-IR")}</b>
+                  <small>ثانیه</small>
+                </span>
+                <div className="lh-timer-copy">
+                  <strong><Icon name="clock" size={13} /> پاسخ شما</strong>
+                  <p>تا تغییر بار بعدی فرصت داری؛ بعد از این زمان بار بعدی جای این یکی را می‌گیرد.</p>
+                </div>
+              </div>
+              <div className="lh-action-buttons">
+                <button
+                  className="lh-accept"
+                  type="button"
+                  disabled={!ready || !current}
+                  onClick={() => current && onAccept(current)}
+                >
+                  <Icon name="check" size={17} /> تأیید و گرفتن بار
+                </button>
+                <button
+                  className="lh-reject"
+                  type="button"
+                  disabled={!ready || !current}
+                  onClick={() => current && onReject(current)}
+                >
+                  <Icon name="close" size={16} /> رد کردن
+                </button>
+                <button
+                  className="lh-profile"
+                  type="button"
+                  disabled={!current}
+                  onClick={() => current && onProfile(current)}
+                >
+                  <Icon name="user" size={15} /> پروفایل
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-    </section>
-  );
-}
-
-function ServiceLogCard({ onNavigate }: { onNavigate: (view: View) => void }) {
-  return (
-    <section className="service-log-card" aria-label="آخرین سرویس‌های خودرو">
-      <div className="service-log-head">
-        <div><Icon name="refresh" size={16} /><strong>آخرین سرویس‌های من</strong></div>
-        <button type="button" onClick={() => onNavigate("maintenance")}>همه <Icon name="chevron" size={13} /></button>
-      </div>
-      <div className="service-log-list">
-        {serviceLogs.slice(0, 2).map((log) => (
-          <button className="service-log-row" type="button" key={log.id} onClick={() => onNavigate("maintenance")}>
-            <span className={`service-log-icon service-log-icon--${log.tone}`}><ServiceIllustration type={log.art} size="sm" /></span>
-            <span className="service-log-body">
-              <strong>{log.title}</strong>
-              <small>{log.date} · {log.km} کیلومتر</small>
-            </span>
-            <span className="service-log-cost">{log.cost}<small> تومان</small></span>
-          </button>
-        ))}
-      </div>
-      <div className="service-log-foot"><i /> سرویس بعدی: ۱٬۶۰۰ کیلومتر دیگر</div>
     </section>
   );
 }
@@ -417,8 +389,6 @@ export function HomeView({
         onReject={onRejectLoad}
         onProfile={onProfile}
       />
-
-      <ServiceLogCard onNavigate={onNavigate} />
 
       <section className="main-services-section">
         <SectionTitle

@@ -183,32 +183,25 @@ export const moreServices: DriverService[] = [
     description: "با اتصال دستگاه عیب‌یاب، خطاهای موتور و گیربکس را قبل از اعزام بعدی بررسی کن. گزارش کامل در پروفایل خودرو ذخیره می‌شود.",
   },
   {
-    id: "battery",
-    name: "باتری به باتری",
-    note: "امداد در محل",
-    category: "tech",
-    description: "اگر خودروی خودت یا ناوگانهات استارت نخورد، امدادگر باتری را در محل تست و در صورت نیاز تعویض می‌کند.",
-  },
-  {
-    id: "fuel",
-    name: "سوخت‌رسانی سیار",
-    note: "بنزین و گازوئیل",
-    category: "tech",
-    description: "برای مسیرهای طولانی و مأموریت‌های جاده‌ای، سوخت را در محل تحویل بگیر تا زمان اعزام از دست نرود.",
-  },
-  {
-    id: "tire",
-    name: "پنچرگیری سیار",
-    note: "تعمیر و تعویض لاستیک",
-    category: "tech",
-    description: "پنچری لاستیک خودروی امدادی را در محل برطرف کن؛ تعویض زاپاس و بالانس اضطراری هم انجام می‌شود.",
-  },
-  {
     id: "inspection",
-    name: "کارشناسی خودرو",
-    note: "قبل از خرید مطمئن شو",
+    name: "بارهای کارشناسی خودرو",
+    note: "بازرسی فنی و بدنه",
     category: "tech",
-    description: "برای خرید خودروی دوم یا بررسی سلامت ناوگان، کارشناس فنی خودرو چاره گزارش کامل شاسی، موتور و بدنه می‌دهد.",
+    description: "بارهای کارشناسی خودرو در محل را ببین و بپذیر؛ گزارش کامل شاسی، موتور و بدنه تحویل کارفرما می‌شود.",
+  },
+  {
+    id: "carwash",
+    name: "بارهای کارواش سیار",
+    note: "شست‌وشو در محل",
+    category: "tech",
+    description: "بارهای کارواش سیار نزدیک محدودهٔ تو؛ شست‌وشو و نظافت خودرو در محل کارفرما انجام می‌شود.",
+  },
+  {
+    id: "maintenance",
+    name: "بارهای سرویس دوره‌ای خودرو در محل",
+    note: "روغن، فیلتر و سرویس",
+    category: "tech",
+    description: "بارهای سرویس دوره‌ای در محل؛ تعویض روغن و فیلتر و سرویس‌های دوره‌ای خودرو در محل کارفرما.",
   },
   {
     id: "reminder",
@@ -276,7 +269,7 @@ export const moreServices: DriverService[] = [
 ];
 
 export const techServices = moreServices.filter((service) =>
-  ["insurance", "diagnostic", "battery", "fuel", "tire", "inspection", "reminder", "tripcheck", "fines", "license", "tolls", "equipment", "fleet", "expert"]
+  ["insurance", "diagnostic", "inspection", "carwash", "maintenance", "reminder", "tripcheck", "fines", "license", "tolls", "equipment", "fleet", "expert"]
     .includes(service.id),
 );
 

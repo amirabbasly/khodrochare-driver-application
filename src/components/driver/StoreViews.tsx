@@ -155,7 +155,7 @@ export function TechView({
         <div className="tech-hero-copy">
           <span className="tech-hero-tag"><Icon name="shield" size={14} /> پشتیبانی فنی ناوگان</span>
           <h2>قبل از اعزام بعدی،<br />خودروت را مطمئن کن.</h2>
-          <p>بیمه، دیاگ، باتری، سوخت و پنچرگیری؛ همه با تعرفهٔ همکاران و پشتیبانی اختصاصی.</p>
+          <p>بیمه، دیاگ، کارشناسی، کارواش و سرویس دوره‌ای؛ همه با تعرفهٔ همکاران و پشتیبانی اختصاصی.</p>
         </div>
         <div className="tech-hero-art">
           <ServiceIllustration type="diagnostic" size="lg" />

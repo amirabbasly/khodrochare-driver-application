@@ -4,12 +4,15 @@ import { APP_ROLE } from "./role";
 export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.khodrochare.ir/api/v1").replace(/\/$/, "");
 export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || new URL(API_BASE_URL).origin;
 const SESSION_KEY = `khodrochare_${APP_ROLE.toLowerCase()}_session_v2`;
+export type Place = { id: string; label: string; city: string; street: string; latitude: number; longitude: number };
+export type VehicleModel = { id: string; name: string; groupId: string; group: { id: string; title: string; nissanBaseToman: number | null; nissanPerKmToman: number | null; flatbedBaseToman: number | null; flatbedPerKmToman: number | null } };
+export type Payment = { id: string; status: "AWAITING_TRANSFER" | "SUBMITTED" | "VERIFIED" | "REJECTED"; cardNumber: string; accountName: string; serviceToman: number; partsToman: number; amountToman: number; commissionPercent: number; commissionToman: number; driverShareToman: number; attempts: { bankReference: string; status: string; reviewNote?: string }[] };
 export type ServiceCode = "REPAIR" | "TOWING" | "MOBILE_CARWASH" | "PERIODIC_SERVICE" | "INSPECTION";
 export type Vehicle = { id: string; name: string; plate: string };
 export type User = { id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
 export type Session = { token: string; expiresAt: string; user: User };
 export type PricingBreakdown = { service: ServiceCode; baseToman: number | null; perKmToman?: number | null; distanceChargeToman?: number | null; surchargePercent?: number; totalToman: number | null; requiresAgreement: boolean; partsPricing?: string; vehicleGroup?: string; transportKind?: string };
-export type AssistanceRequest = { id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
+export type AssistanceRequest = { id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; originAddress?: string | null; destinationAddress?: string | null; partsQuoteToman?: number | null; partsQuoteVersion?: number; partsApprovedToman?: number | null; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
 export type Tracking = { driver: { latitude: number; longitude: number; recordedAt: string } | null; stale?: boolean; distanceToOriginMeters?: number; distanceMethod?: string };
 export type DocumentRef = { id: string; token: string };
 
@@ -61,6 +64,16 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
     return `اطلاعات ${fields[String(data.issues[0].path[0])] || "فرم"} معتبر نیست.`;
   }
   const known: Record<string, string> = {
+    "Address search unavailable": "جست‌وجوی آدرس موقتاً در دسترس نیست؛ دوباره تلاش کنید.",
+    "Address selection expired; search again": "اعتبار آدرس انتخاب‌شده تمام شده؛ دوباره جست‌وجو کنید.",
+    "Vehicle model not found": "مدل خودرو پیدا نشد؛ دوباره از فهرست انتخاب کنید.",
+    "Parts quote must be approved before payment": "ابتدا امدادگر باید هزینه قطعات را پس از بررسی ثبت کند و شما آن را تأیید کنید.",
+    "Final service amount requires agreement": "ابتدا مبلغ نهایی خدمت باید مشخص و توافق شود.",
+    "Bank reference already used": "این شماره پیگیری قبلاً ثبت شده است.",
+    "Contact support for payment refund before cancellation": "واریز شما ثبت شده است؛ برای لغو و پیگیری وجه با پشتیبانی تماس بگیرید.",
+    "Parts quote requires inspection": "ثبت هزینه قطعات پس از رسیدن امدادگر و بررسی خودرو مجاز است.",
+    "Parts quote changed; reload": "هزینه قطعات تغییر کرده؛ مبلغ جدید را بررسی کنید.",
+    "Payment amount is already locked": "اطلاعات پرداخت صادر شده و تغییر مبلغ ممکن نیست؛ با پشتیبانی تماس بگیرید.",
     "Invalid phone or password": "شماره تماس یا رمز عبور درست نیست.",
     "Phone or national ID already registered for this role": "شماره تماس یا کد ملی قبلاً برای این نقش ثبت شده است.",
     "Request unavailable or unsupported service": "درخواست دیگر قابل پذیرش نیست یا با خدمات شما مطابقت ندارد.",

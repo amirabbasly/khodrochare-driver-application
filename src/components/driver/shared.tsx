@@ -58,6 +58,9 @@ export type PartCategory = {
 };
 
 export type LoadOffer = {
+  service?: string;
+  partsQuoteToman?: number | null;
+  partsApprovedToman?: number | null;
   serverStatus?: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED";
   priceKnown?: boolean;
   id: string;

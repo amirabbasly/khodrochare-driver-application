@@ -8,18 +8,19 @@ export function toLoad(request: AvailableRequest & Partial<AssistanceRequest>): 
   return {
     id: request.id, customer: "مشتری خودرو چاره", role: "درخواست امداد", rating: 0, tone: 0,
     car: request.vehicleName, plate: request.vehiclePlate || "—",
-    from: `${request.originLat.toFixed(5)}, ${request.originLng.toFixed(5)}`,
-    to: request.destinationLat != null && request.destinationLng != null ? `${request.destinationLat.toFixed(5)}, ${request.destinationLng.toFixed(5)}` : "تعمیر در مبدأ",
+    from: request.originAddress || "نشانی مبدأ ثبت نشده",
+    to: request.destinationLat != null && request.destinationLng != null ? request.destinationAddress || "نشانی مقصد ثبت نشده" : "تعمیر در مبدأ",
     distanceKm: (request.distanceMeters || 0) / 1000, price: request.priceToman || 0,
     priceKnown: request.priceToman != null,
     when: new Date(request.createdAt).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" }),
     weight: request.service === "TOWING" ? "حمل خودرو" : "تعمیر در محل", note: (request.problem || (request.service === "TOWING" ? "درخواست حمل خودرو" : "درخواست تعمیر در محل")) + (request.service === "REPAIR" ? " · ورودی ۸۰۰٬۰۰۰ تومان؛ هزینه قطعات پس از بررسی خودرو محاسبه می‌شود." : ""),
     phone: "", status: request.status === "PENDING" ? "pending" : request.status === "COMPLETED" ? "done" : "active",
-    lat: request.originLat, lng: request.originLng, serverStatus: request.status,
+    lat: request.originLat, lng: request.originLng, partsQuoteToman: request.partsQuoteToman, partsApprovedToman: request.partsApprovedToman, service: request.service, serverStatus: request.status,
   };
 }
 
 export function useDriverFeed(ready: boolean, notify: (message: string) => void) {
+  const [earnings, setEarnings] = useState(0);
   const [loads, setLoads] = useState<LoadOffer[]>([]);
   const [tracking, setTracking] = useState<Tracking>({ driver: null });
   const notifyRef = useRef(notify);
@@ -30,11 +31,13 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
     if (fetching.current) return;
     fetching.current = true;
     try {
-      const [assigned, pending] = await Promise.all([
+      const [assigned, pending, earningTotal] = await Promise.all([
         api<AssistanceRequest[]>("/requests", { signal }),
         ready ? api<AvailableRequest[]>("/drivers/requests/available", { signal }) : Promise.resolve([]),
+        api<{ totalToman: number }>("/drivers/earnings", { signal }),
       ]);
       if (signal?.aborted) return;
+      setEarnings(earningTotal.totalToman);
       const own = assigned.filter(r => r.status !== "CANCELLED");
       // The available endpoint deliberately omits private fields and status.
       const offers = pending.map(request => ({ ...request, status: "PENDING" as const, driverId: null }));
@@ -102,5 +105,5 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
     setLoads(items => items.map(item => item.id === load.id ? toLoad(request) : item));
     return true;
   };
-  return { loads, active, tracking, accept, status, refresh };
+  return { earnings, loads, active, tracking, accept, status, refresh };
 }

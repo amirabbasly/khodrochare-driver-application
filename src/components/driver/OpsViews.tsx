@@ -1,9 +1,10 @@
 "use client";
+import './payment-parts.css';
 
 import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
-import { errorMessage, type Tracking } from "@/lib/api";
+import { api, latinDigits, errorMessage, type Tracking } from "@/lib/api";
 import { UserPinMap } from "@/components/Maps";
 import { LoadOfferCard } from "@/components/driver/HomeView";
 import {
@@ -196,6 +197,7 @@ export function JobView({
   onToast,
   onComplete,
   onArrive,
+  onPartsQuote,
   tracking,
   onOpenChat,
 }: {
@@ -204,9 +206,12 @@ export function JobView({
   onToast: (message: string) => void;
   onComplete: (load: LoadOffer) => Promise<void>;
   onArrive: (load: LoadOffer) => Promise<void>;
+  onPartsQuote: () => Promise<void>;
   tracking: Tracking;
   onOpenChat: () => void;
 }) {
+  const [partsAmount, setPartsAmount] = useState("");
+  const [partsBusy, setPartsBusy] = useState(false);
   const [step, setStep] = useState(load.status === "done" ? 4 : load.serverStatus === "ARRIVED" ? 2 : 1);
 
   const [busy, setBusy] = useState(false);
@@ -248,7 +253,7 @@ export function JobView({
           <div className="job-route">
             <div className="job-route-stop">
               <span className="route-dot route-dot--from" />
-              <div><small>مبدأ بارگیری</small><strong>{load.from}</strong><span>تهران · پلاک {load.plate}</span></div>
+              <div><small>مبدأ بارگیری</small><strong>{load.from}</strong><span>پلاک {load.plate}</span></div>
             </div>
             <span className="job-route-line"><i /><Icon name="arrow-left" size={13} /></span>
             <div className="job-route-stop">
@@ -264,6 +269,7 @@ export function JobView({
           </div>
 
           <p className="job-note"><Icon name="chat" size={14} /> {load.note}</p>
+          {load.service === "REPAIR" && ["ARRIVED", "COMPLETED"].includes(load.serverStatus || "") && <section className="parts-quote-panel"><h3>هزینه قطعات پس از بررسی</h3><p>مبلغ قطعات را به تومان ثبت کنید؛ اگر قطعه‌ای مصرف نشده، صفر وارد کنید. مشتری باید مبلغ را تأیید کند. کمیسیون ۳۰٪ از مجموع خدمت و قطعات محاسبه می‌شود.</p><form onSubmit={async event => { event.preventDefault(); if (partsBusy) return; setPartsBusy(true); try { await api(`/requests/${load.id}/parts-quote`, { method: "POST", body: { amountToman: Number(latinDigits(partsAmount).replace(/[,٬]/g, "")) } }); await onPartsQuote(); onToast("هزینه قطعات برای تأیید مشتری ثبت شد."); } catch (error) { onToast(errorMessage(error)); } finally { setPartsBusy(false); } }}><label className="form-field"><span className="field-label">مبلغ قطعات (تومان)</span><span className="field-control"><input value={partsAmount} onChange={event => setPartsAmount(event.target.value)} inputMode="numeric" required /></span></label><button className="primary-button" type="submit" disabled={partsBusy}>ارسال هزینه قطعات</button></form>{load.partsQuoteToman != null && <p>قطعات: {load.partsQuoteToman.toLocaleString("fa-IR")} تومان · {load.partsApprovedToman == null ? "منتظر تأیید مشتری" : "تأییدشده توسط مشتری"}</p>}</section>}
 
           <div className="job-actions">
             <button className="primary-button" type="button" onClick={advance} disabled={busy || load.status === "done"}>
@@ -280,7 +286,7 @@ export function JobView({
               <span className="map-frame-badge"><Icon name="pin" size={15} /></span>
               <div className="map-frame-titles">
                 <strong>نقطهٔ بارگیری</strong>
-                <small>{load.from} · محدودهٔ تهران</small>
+                <small>{load.from}</small>
               </div>
               <span className="map-frame-tag"><Icon name="route" size={12} /> {tracking.distanceToOriginMeters === undefined ? "—" : (tracking.distanceToOriginMeters / 1000).toLocaleString("fa-IR", { maximumFractionDigits: 1 })} کیلومتر تا مبدأ</span>
             </div>

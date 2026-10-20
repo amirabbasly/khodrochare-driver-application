@@ -198,11 +198,11 @@ export default function Dashboard() {
   const user = useAuthenticatedUser();
   const serviceIds = { REPAIR: "repair", TOWING: "transport", MOBILE_CARWASH: "carwash", PERIODIC_SERVICE: "maintenance", INSPECTION: "inspection" };
   const session: DriverSession = { name: user?.fullName || "سفیر خودرو چاره", username: user?.phone, phone: user?.phone, nationalCode: user?.nationalId, plate: user?.vehiclePlate, vehicleType: user?.vehicleType, services: user?.services.map(code => serviceIds[code]), documentName: user?.identityDocumentId ? "مدرک هویتی ثبت‌شده" : undefined };
-  const [balance] = useState(0);
   const [ready, setReady] = useState(false);
   const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
   const [rejectedIds, setRejectedIds] = useState<string[]>([]);
   const feed = useDriverFeed(ready, notify);
+  const balance = feed.earnings;
   const loads = feed.loads.filter(load => load.status !== "pending" || !rejectedIds.includes(load.id));
   const activeLoad = loads.find(load => load.id === selectedLoadId) || feed.active;
   const [partFilter, setPartFilter] = useState<PartKey | "all">("all");
@@ -317,7 +317,7 @@ export default function Dashboard() {
     case "readiness": content = <ReadinessView ready={ready} onToggle={toggleReady} onBack={() => navigate("home")} onToast={notify} />; break;
     case "job":
       content = activeLoad
-        ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
+        ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onPartsQuote={async () => { await feed.refresh(); }} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
         : <LoadsView loads={loads} onBack={() => navigate("home")} onToast={notify} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
       break;
     case "parts":

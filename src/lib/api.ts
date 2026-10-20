@@ -8,7 +8,8 @@ export type ServiceCode = "REPAIR" | "TOWING" | "MOBILE_CARWASH" | "PERIODIC_SER
 export type Vehicle = { id: string; name: string; plate: string };
 export type User = { id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
 export type Session = { token: string; expiresAt: string; user: User };
-export type AssistanceRequest = { id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; createdAt: string; updatedAt: string };
+export type PricingBreakdown = { service: ServiceCode; baseToman: number | null; perKmToman?: number | null; distanceChargeToman?: number | null; surchargePercent?: number; totalToman: number | null; requiresAgreement: boolean; partsPricing?: string; vehicleGroup?: string; transportKind?: string };
+export type AssistanceRequest = { id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
 export type Tracking = { driver: { latitude: number; longitude: number; recordedAt: string } | null; stale?: boolean; distanceToOriginMeters?: number; distanceMethod?: string };
 export type DocumentRef = { id: string; token: string };
 
@@ -41,7 +42,7 @@ export function getSession(): Session | null {
     const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const session: Session = JSON.parse(raw);
-    if (!session.token || session.user?.role !== APP_ROLE || !Number.isFinite(Date.parse(session.expiresAt)) || Date.parse(session.expiresAt) <= Date.now()) return null;
+    if (session.user?.role !== APP_ROLE || !Number.isFinite(Date.parse(session.expiresAt)) || Date.parse(session.expiresAt) <= Date.now()) return null;
     return session;
   } catch { return null; }
 }
@@ -75,14 +76,10 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
 export async function api<T>(route: string, options: { method?: string; body?: unknown; auth?: boolean; signal?: AbortSignal; responseType?: "blob" } = {}): Promise<T> {
   const { auth = true, method = "GET", body, signal } = options;
   const session = auth ? getSession() : null;
-  if (auth && !session) {
-    window.dispatchEvent(new Event("khodrochare:unauthorized"));
-    throw new ApiError("برای ادامه وارد حساب خود شوید.", 401);
-  }
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 20000);
   try {
-    const response = await fetch(`${API_BASE_URL}${route}`, { method, cache: "no-store", headers: { ...(body instanceof FormData ? {} : body === undefined ? {} : { "Content-Type": "application/json" }), ...(session ? { Authorization: `Bearer ${session.token}` } : {}) }, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal: signal ? AbortSignal.any([signal, controller.signal]) : controller.signal });
+    const response = await fetch(`${API_BASE_URL}${route}`, { method, cache: "no-store", credentials: "include", headers: { "X-App-Role": APP_ROLE, "X-Session-Persistence": localStorage.getItem(SESSION_KEY) ? "persistent" : session ? "browser" : "persistent", ...(body instanceof FormData ? {} : body === undefined ? {} : { "Content-Type": "application/json" }), ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}) }, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal: signal ? AbortSignal.any([signal, controller.signal]) : controller.signal });
     const data = response.status === 204 ? undefined : response.ok && options.responseType === "blob" ? await response.blob() : await response.json();
     if (!response.ok) {
       if (response.status === 401 && auth && getSession()?.token === session?.token) {
@@ -91,14 +88,20 @@ export async function api<T>(route: string, options: { method?: string; body?: u
       }
       throw new ApiError(serverMessage(response.status, data || {}), response.status);
     }
+    if (auth && response.ok) {
+      const expiresAt = response.headers.get("X-Session-Expires-At");
+      if (route === "/me" && data?.role === APP_ROLE) {
+        saveSession({ token: session?.token || "", user: data, expiresAt: expiresAt || session?.expiresAt || new Date(Date.now() + 90 * 86400000).toISOString() }, !session || !!localStorage.getItem(SESSION_KEY));
+      } else if (session && expiresAt) saveSession({ ...session, expiresAt }, !!localStorage.getItem(SESSION_KEY));
+    }
     return data as T;
   } catch (error) {
     if (error instanceof ApiError || signal?.aborted) throw error;
     throw new ApiError(controller.signal.aborted ? "زمان اتصال به سرور تمام شد؛ وضعیت درخواست را پیش از ارسال مجدد بررسی کنید." : "اتصال به سرور برقرار نشد؛ اینترنت خود را بررسی کنید.", 0);
   } finally { clearTimeout(timeout); }
 }
-export function login(phone: string, password: string) {
-  return api<Session>(`/auth/${APP_ROLE === "CUSTOMER" ? "customers" : "drivers"}/login`, { method: "POST", auth: false, body: { phone: normalizePhone(phone), password } });
+export function login(phone: string, password: string, remember = true) {
+  return api<Session>(`/auth/${APP_ROLE === "CUSTOMER" ? "customers" : "drivers"}/login`, { method: "POST", auth: false, body: { phone: normalizePhone(phone), password, remember } });
 }
 export function register(body: unknown) {
   return api<Session>(`/auth/${APP_ROLE === "CUSTOMER" ? "customers" : "drivers"}/register`, { method: "POST", auth: false, body });
@@ -115,7 +118,7 @@ export async function logout() {
 export const errorMessage = (error: unknown) => error instanceof Error ? error.message : "عملیات انجام نشد؛ دوباره تلاش کنید.";
 export const requestStatus = (s: AssistanceRequest["status"]) => ({ PENDING: "در انتظار امدادگر", ACCEPTED: "امدادگر در مسیر شماست", ARRIVED: "امدادگر به مبدأ رسیده است", COMPLETED: "درخواست انجام شد", CANCELLED: "درخواست لغو شد" })[s];
 export function openSocket() {
-  const socket = io(SOCKET_URL, { autoConnect: false, auth: cb => cb({ token: getSession()?.token }) });
+  const socket = io(SOCKET_URL, { autoConnect: false, withCredentials: true, auth: cb => cb({ token: getSession()?.token, role: APP_ROLE }) });
   socket.connect();
   return socket;
 }

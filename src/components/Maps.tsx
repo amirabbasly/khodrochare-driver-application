@@ -68,8 +68,13 @@ export function LocationPickerMap({
     async function init() {
       const L = (await import("leaflet")).default;
       if (disposed || !containerRef.current || mapRef.current) return;
+      let initial = TEHRAN;
+      try {
+        const cached = JSON.parse(sessionStorage.getItem("khodrochare_location_v1") || "null");
+        if (cached && Number.isFinite(cached.latitude) && Number.isFinite(cached.longitude) && Date.now() - Date.parse(cached.recordedAt) < 120000) initial = [cached.latitude, cached.longitude];
+      } catch {}
       const map = L.map(containerRef.current, {
-        center: TEHRAN,
+        center: initial,
         zoom: 12,
         zoomControl: true,
         attributionControl: false,
@@ -79,7 +84,7 @@ export function LocationPickerMap({
       clickHandler = (e) => dropPin(L, map, e.latlng.lat, e.latlng.lng);
       map.on("click", clickHandler);
       mapRef.current = map;
-      dropPin(L, map, TEHRAN[0], TEHRAN[1]);
+      dropPin(L, map, initial[0], initial[1]);
       window.setTimeout(() => map.invalidateSize(), 220);
     }
 

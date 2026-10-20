@@ -1,0 +1,15 @@
+.register-form .service-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.register-form .service-picker-item { display: grid; grid-template-columns: 56px minmax(0, 1fr) 22px; align-items: center; gap: 10px; min-height: 94px; padding: 14px 12px; text-align: right; font: inherit; background: #fff; border: 1.5px solid #e3e9ed; border-radius: 16px; color: #112a38; cursor: pointer; transition: border-color .18s, background-color .18s, box-shadow .18s; }
+.register-form .service-picker-item:last-child { grid-column: 1 / -1; }
+.register-form .service-picker-item:hover { border-color: #e8b58e; background: #fffaf6; }
+.register-form .service-picker-item.is-active { background: #fff5ec; border-color: #e77a29; box-shadow: 0 0 0 1px #e77a291a; }
+.register-form .service-picker-art { display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; overflow: hidden; }
+.register-form .service-picker-copy { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.register-form .service-picker-copy strong { font-size: 13px; font-weight: 800; line-height: 1.75; }
+.register-form .service-picker-copy small { font-size: 11px; color: #71818b; line-height: 1.8; }
+.register-form .service-picker-check { display: grid; place-items: center; width: 22px; height: 22px; border: 1.5px solid #d7e0e5; border-radius: 7px; color: transparent; background: #fff; }
+.register-form .is-active .service-picker-check { background: #e77a29; border-color: #e77a29; color: #fff; }
+.register-form .service-picker-item:focus-visible { outline: 3px solid #e77a29; outline-offset: 3px; }
+.plate-iran .plate-flag { display: block; width: 30px; height: 18px; overflow: hidden; border-radius: 1px; }
+@media (max-width: 560px) { .register-form .service-picker { grid-template-columns: minmax(0, 1fr); gap: 10px; } .register-form .service-picker-item:last-child { grid-column: auto; } .register-form .service-picker-item { min-height: 82px; } }
+@media (prefers-reduced-motion: reduce) { .register-form .service-picker-item { transition: none; } }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { LocationPermissionModal } from "@/components/LocationPermissionModal";
 import { useRouter } from "next/navigation";
 import { logout as backendLogout, errorMessage } from "@/lib/api";
 import { useAuthenticatedUser } from "@/lib/use-backend";
@@ -190,6 +191,7 @@ function CustomerSheet({ load, onClose, onToast }: { load: LoadOffer; onClose: (
 export default function Dashboard() {
   const router = useRouter();
   const [view, setView] = useState<View>("home");
+  const [homeVisit, setHomeVisit] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -220,6 +222,7 @@ export default function Dashboard() {
   }
 
   function navigate(next: View) {
+    if (next === "home") setHomeVisit(value => value + 1);
     setView(next);
     setDrawerOpen(false);
     setToast("");
@@ -349,6 +352,7 @@ export default function Dashboard() {
 
   return (
     <div className="app-frame" dir="rtl">
+      {user && <LocationPermissionModal key={homeVisit} />}
       <header className="app-header">
         <div className="app-header-inner">
           <div className="header-menu-wrap">

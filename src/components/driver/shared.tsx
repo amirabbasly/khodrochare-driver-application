@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/Icons";
 import type { ArtId } from "@/components/ServiceIllustration";
@@ -581,12 +582,7 @@ export function formatToman(value: number) {
 export function IranFlag({ className }: { className?: string }) {
   return (
     <span className={className ? `iran-flag ${className}` : "iran-flag"} aria-hidden="true">
-      <svg viewBox="0 0 24 16" width="100%" height="100%" role="presentation">
-        <rect width="24" height="16" rx="1.6" fill="#fff" />
-        <path d="M0 1.6A1.6 1.6 0 0 1 1.6 0h20.8A1.6 1.6 0 0 1 24 1.6V5.33H0Z" fill="#239f40" />
-        <path d="M0 10.67h24v3.73A1.6 1.6 0 0 1 22.4 16H1.6A1.6 1.6 0 0 1 0 14.4Z" fill="#da0000" />
-        <path d="M12 6.1c.9 0 1.55.62 1.55 1.5 0 .86-.66 1.5-1.55 1.5s-1.55-.64-1.55-1.5c0-.88.65-1.5 1.55-1.5Zm-2.9.5c-.35.2-.55.62-.55 1 0 .5.2.85.55 1.05m5.8 0c.35-.2.55-.55.55-1.05 0-.38-.2-.8-.55-1M7.6 7.35c-.2.2-.2.7 0 .9m8.8 0c.2-.2.2-.7 0-.9" stroke="#da0000" strokeWidth=".55" fill="none" strokeLinecap="round" />
-      </svg>
+      <Image src="/iran-flag.svg" alt="" width={36} height={21} unoptimized style={{ width: "100%", height: "100%", objectFit: "contain" }} />
     </span>
   );
 }

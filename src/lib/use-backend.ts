@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, getSession, openSocket, updateSessionUser, type AssistanceRequest, type Tracking, type User } from "./api";
+import { api, openSocket, updateSessionUser, type AssistanceRequest, type Tracking, type User } from "./api";
 
 export function useAuthenticatedUser() {
   const router = useRouter();
@@ -10,8 +10,7 @@ export function useAuthenticatedUser() {
     const controller = new AbortController();
     const unauthorized = () => router.replace("/");
     window.addEventListener("khodrochare:unauthorized", unauthorized);
-    if (!getSession()) unauthorized();
-    else api<User>("/me", { signal: controller.signal }).then(user => {
+    api<User>("/me", { signal: controller.signal }).then(user => {
       if (controller.signal.aborted) return;
       updateSessionUser(user); setUser(user);
     }).catch(() => {});

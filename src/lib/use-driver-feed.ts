@@ -13,7 +13,7 @@ export function toLoad(request: AvailableRequest & Partial<AssistanceRequest>): 
     distanceKm: (request.distanceMeters || 0) / 1000, price: request.priceToman || 0,
     priceKnown: request.priceToman != null,
     when: new Date(request.createdAt).toLocaleString("fa-IR", { timeZone: "Asia/Tehran" }),
-    weight: request.service === "TOWING" ? "حمل خودرو" : "تعمیر در محل", note: request.problem || (request.service === "TOWING" ? "درخواست حمل خودرو" : "درخواست تعمیر در محل"),
+    weight: request.service === "TOWING" ? "حمل خودرو" : "تعمیر در محل", note: (request.problem || (request.service === "TOWING" ? "درخواست حمل خودرو" : "درخواست تعمیر در محل")) + (request.service === "REPAIR" ? " · ورودی ۸۰۰٬۰۰۰ تومان؛ هزینه قطعات پس از بررسی خودرو محاسبه می‌شود." : ""),
     phone: "", status: request.status === "PENDING" ? "pending" : request.status === "COMPLETED" ? "done" : "active",
     lat: request.originLat, lng: request.originLng, serverStatus: request.status,
   };

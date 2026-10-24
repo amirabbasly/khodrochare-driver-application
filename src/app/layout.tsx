@@ -2,15 +2,16 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { PwaBootstrap, SplashGate } from "@/components/AppExperience";
 import "./globals.css";
+import "./driver.css";
 
 export const metadata: Metadata = {
-  title: "خودرو چاره | همه‌چیز برای ماشینت، یک‌جا",
-  description: "خدمات جامع خودرویی، امداد، سرویس، قطعات و بازار خودرو در خودرو چاره.",
-  applicationName: "خودرو چاره",
+  title: "خودرو چاره | ناوگان امداد و سفیران",
+  description: "دریافت بار، تالار ایرانشهر، قطعات یدکی و خدمات ویژهٔ ناوگان امداد و سفیران خودرو چاره.",
+  applicationName: "خودرو چاره · ناوگان",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    title: "خودرو چاره",
+    title: "خودرو چاره ناوگان",
     statusBarStyle: "black-translucent",
   },
   icons: {

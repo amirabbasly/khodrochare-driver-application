@@ -1,0 +1,394 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useState } from "react";
+import { Icon } from "@/components/Icons";
+import { LoadRequestMap } from "@/components/Maps";
+import { MoreDots3D, ServiceIllustration } from "@/components/ServiceIllustration";
+import {
+  Avatar,
+  bannerSlides,
+  formatToman,
+  heroSlides,
+  partCategories,
+  moreServices,
+  SectionTitle,
+  type DriverService,
+  type LoadOffer,
+  type PartCategory,
+  type PartKey,
+  type View,
+} from "@/components/driver/shared";
+
+function HeroSlider({ onNavigate }: { onNavigate: (view: View) => void }) {
+  const [current, setCurrent] = useState(0);
+  const total = heroSlides.length;
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrent((index) => (index + 1) % total), 6500);
+    return () => window.clearInterval(timer);
+  }, [total]);
+
+  return (
+    <section className="hero-slider" aria-roledescription="carousel" aria-label="پیشنهادهای ویژهٔ ناوگان امداد">
+      {heroSlides.map((slide, index) => (
+        <article key={slide.id} className={`hero-slide${index === current ? " is-active" : ""}`} aria-hidden={index !== current}>
+          <Image src={slide.image} alt="" fill sizes="(max-width: 760px) 100vw, 1320px" priority={index === 0} className="hero-slide-image" />
+          <div className="hero-slide-veil" />
+          <div className="hero-slide-copy">
+            <span className="hero-slide-tag">{slide.tag}</span>
+            <h2>{slide.title}</h2>
+            <p>{slide.description}</p>
+            <button className="hero-slide-cta" type="button" tabIndex={index === current ? 0 : -1} onClick={() => onNavigate(slide.target)}>
+              {slide.action} <Icon name="arrow-left" size={16} />
+            </button>
+          </div>
+        </article>
+      ))}
+      <div className="hero-slider-bullets">
+        {heroSlides.map((slide, index) => (
+          <button
+            key={slide.id}
+            type="button"
+            className={`slider-bullet${index === current ? " is-active" : ""}`}
+            aria-label={`اسلاید ${index + 1} از ${total}`}
+            aria-current={index === current}
+            onClick={() => setCurrent(index)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BannerStrip({ onNavigate }: { onNavigate: (view: View) => void }) {
+  return (
+    <section className="banner-strip-section" aria-label="پیشنهادهای ناوگان امداد">
+      <SectionTitle title="چاره‌های بیشتر برای ناوگان" caption="برای دیدن همهٔ پیشنهادها، افقی اسکرول کن." />
+      <div className="banner-strip">
+        {bannerSlides.map((slide) => (
+          <article key={slide.id} className="banner-strip-card">
+            <Image src={slide.image} alt="" fill sizes="(max-width: 640px) 80vw, 380px" className="banner-strip-image" />
+            <div className="banner-strip-veil" />
+            <div className="banner-strip-copy">
+              <span className="banner-strip-tag">{slide.tag}</span>
+              <h3>{slide.title}</h3>
+              <p>{slide.description}</p>
+              <button className="banner-slide-link" type="button" onClick={() => onNavigate(slide.target)}>
+                بیشتر ببین <Icon name="arrow-left" size={14} />
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ServiceCard({ service, onClick, delay }: { service: DriverService; onClick: () => void; delay?: number }) {
+  return (
+    <button className={`service-card service-card--${service.id}`} type="button" onClick={onClick}>
+      <ServiceIllustration type={service.id} size="md" delay={delay} />
+      <span className="service-name">{service.name}</span>
+      <span className="service-note">{service.note}</span>
+    </button>
+  );
+}
+
+function PartCategoryCard({ category, onClick, delay }: { category: PartCategory; onClick: () => void; delay?: number }) {
+  return (
+    <button className={`part-cat-card part-cat-card--${category.accent}`} type="button" onClick={onClick}>
+      <span className="part-cat-glow" aria-hidden="true" />
+      <span className="part-cat-art"><ServiceIllustration type={category.id} size="lg" delay={delay} /></span>
+      <strong>{category.name}</strong>
+      <small>{category.note}</small>
+      <span className="part-cat-price">از {category.priceFrom} تومان</span>
+    </button>
+  );
+}
+
+export function LoadOfferCard({
+  load,
+  onAccept,
+  onReject,
+  onProfile,
+  acceptLabel = "تأیید بار",
+  compact = false,
+}: {
+  load: LoadOffer;
+  onAccept: () => void;
+  onReject?: () => void;
+  onProfile?: () => void;
+  acceptLabel?: string;
+  compact?: boolean;
+}) {
+  return (
+    <article className={`load-offer${compact ? " load-offer--compact" : ""}`}>
+      <div className="load-offer-head">
+        <div className="load-person">
+          <Avatar name={load.customer} tone={load.tone} />
+          <div>
+            <strong>{load.customer}</strong>
+            <small><Icon name="shield" size={12} /> {load.role} · <b>★ {load.rating.toLocaleString("fa-IR")}</b></small>
+          </div>
+        </div>
+        <span className="load-free-badge"><i /> بار آزاد</span>
+      </div>
+
+      <div className="load-route">
+        <div className="route-stop">
+          <span className="route-dot route-dot--from" />
+          <small>مبدأ</small>
+          <strong>{load.from}</strong>
+        </div>
+        <span className="route-line" aria-hidden="true"><i /></span>
+        <div className="route-stop route-stop--to">
+          <span className="route-dot route-dot--to" />
+          <small>مقصد</small>
+          <strong>{load.to}</strong>
+        </div>
+        <span className="route-distance"><Icon name="route" size={13} /> {load.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
+      </div>
+
+      <div className="load-facts">
+        <span><Icon name="car" size={14} /> {load.car}</span>
+        <span className="load-plate"><Icon name="tag" size={13} /> {load.plate}</span>
+        <span><Icon name="clock" size={14} /> {load.when}</span>
+        <span className="load-price">{load.priceKnown === false ? "تعیین نشده" : formatToman(load.price)}</span>
+      </div>
+      {!compact && <p className="load-note">{load.note}</p>}
+
+      <div className="load-offer-actions">
+        <button className="load-accept" type="button" onClick={onAccept}><Icon name="check" size={16} /> {acceptLabel}</button>
+        {onReject && <button className="load-reject" type="button" onClick={onReject}><Icon name="close" size={15} /> رد کردن</button>}
+        {onProfile && <button className="load-profile" type="button" onClick={onProfile}><Icon name="user" size={15} /> پروفایل</button>}
+      </div>
+    </article>
+  );
+}
+
+const ROTATE_SECONDS = 15;
+
+function LoadHero({
+  ready,
+  loads,
+  activeCount,
+  onNavigate,
+  onAccept,
+  onReject,
+}: {
+  ready: boolean;
+  loads: LoadOffer[];
+  activeCount: number;
+  onNavigate: (view: View) => void;
+  onAccept: (load: LoadOffer) => void;
+  onReject: (load: LoadOffer) => void;
+}) {
+  const total = loads.length;
+  const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!ready || total === 0) return;
+    const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
+    return () => window.clearInterval(timer);
+  }, [ready, total]);
+
+  const index = total > 0 ? Math.floor(tick / ROTATE_SECONDS) % total : 0;
+  const seconds = ROTATE_SECONDS - (tick % ROTATE_SECONDS);
+  const current = total > 0 ? loads[index] : null;
+  const progress = Math.round((seconds / ROTATE_SECONDS) * 100);
+  const isCarry = current ? current.weight.startsWith("حمل") : false;
+
+  return (
+    <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار آزاد و درخواست امداد">
+      <div className="lh-panel-head lh-panel-head--load">
+        <span className="lh-panel-index">۱</span>
+        <strong>آخرین بار</strong>
+        <small className="lh-panel-hint">درخواست امدادخواه روی نقشه</small>
+        <span className="lh-live"><i /> {ready ? "آمادهٔ دریافت بار" : "آمادگی خاموش"}</span>
+        <span className="lh-counter">
+          {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
+        </span>
+        <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
+        <span className="lh-active-count"><Icon name="briefcase" size={12} /> {activeCount.toLocaleString("fa-IR")} در حال انجام</span>
+        <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
+          تالار ایرانشهر <Icon name="arrow-left" size={14} />
+        </button>
+      </div>
+
+      {!ready ? (
+        <div className="lh-top-empty">
+          <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
+          <div>
+            <strong>آمادگی دریافت بار خاموش است</strong>
+            <p>با کلید آمادگی در بالای صفحه روشنش کن تا بارهای نزدیک محدوده‌ات اینجا نشان داده شوند.</p>
+          </div>
+        </div>
+      ) : !current ? (
+        <div className="lh-top-empty lh-top-empty--calm">
+          <span className="lh-empty-icon"><Icon name="check" size={22} /></span>
+          <div>
+            <strong>بار آزادی در محدودهٔ تو نیست</strong>
+            <p>آمادگی‌ات فعال است؛ به‌محض ثبت بار جدید اینجا نمایش داده می‌شود.</p>
+          </div>
+        </div>
+      ) : (
+        <article className="load-request">
+          <header className="load-request-summary">
+            <div className="load-request-person">
+              <Avatar name={current.customer} tone={current.tone} />
+              <strong className="load-request-name">{current.customer}</strong>
+            </div>
+
+            <span className="load-request-price">
+              <small>مبلغ بار</small>
+              <b>{formatToman(current.price)}</b>
+            </span>
+          </header>
+
+          {isCarry && (
+            <div className="load-request-route">
+              <span className="load-route-point">
+                <i className="route-dot route-dot--from" />
+                <span><small>مبدأ</small><b>{current.from}</b></span>
+              </span>
+              <span className="load-route-gap"><Icon name="arrow-left" size={14} /></span>
+              <span className="load-route-point">
+                <i className="route-dot route-dot--to" />
+                <span><small>مقصد</small><b>{current.to}</b></span>
+              </span>
+            </div>
+          )}
+
+          <div className="load-request-meta">
+            <span><Icon name="car" size={13} /> {current.car}</span>
+            <span dir="ltr"><Icon name="tag" size={12} /> {current.plate}</span>
+            <span><Icon name="route" size={13} /> {current.distanceKm.toLocaleString("fa-IR")} کیلومتر</span>
+            <span><Icon name="clock" size={13} /> ثبت {current.when}</span>
+          </div>
+
+          <div className="load-request-map">
+            <LoadRequestMap lat={current.lat} lng={current.lng} label={current.customer} />
+            <span className="load-map-badge"><Icon name="pin" size={12} /> موقعیت امدادخواه</span>
+            <span
+              className="load-request-timer"
+              style={{ ["--timer-progress" as string]: `${progress}%` }}
+              aria-label={`${seconds} ثانیه تا بار بعدی`}
+            >
+              <b>{seconds.toLocaleString("fa-IR")}</b>
+              <small>ثانیه</small>
+            </span>
+          </div>
+
+          <footer className="load-request-actions">
+            <button
+              className="lh-accept"
+              type="button"
+              disabled={!ready}
+              onClick={() => onAccept(current)}
+            >
+              <Icon name="check" size={17} /> تأیید و گرفتن بار
+            </button>
+            <button
+              className="lh-cancel"
+              type="button"
+              disabled={!ready}
+              onClick={() => onReject(current)}
+            >
+              <Icon name="close" size={16} /> اعلام کنسلی
+            </button>
+          </footer>
+        </article>
+      )}
+    </section>
+  );
+}
+
+export function HomeView({
+  balance,
+  ready,
+  pendingLoads,
+  activeCount,
+  onNavigate,
+  onToast,
+  onAcceptLoad,
+  onRejectLoad,
+  onOpenPart,
+  onOpenService,
+}: {
+  balance: number;
+  ready: boolean;
+  pendingLoads: LoadOffer[];
+  activeCount: number;
+  onNavigate: (view: View) => void;
+  onToast: (message: string) => void;
+  onAcceptLoad: (load: LoadOffer) => void;
+  onRejectLoad: (load: LoadOffer) => void;
+  onOpenPart: (key: PartKey) => void;
+  onOpenService: (service: DriverService) => void;
+}) {
+  return (
+    <div className="home-content">
+      <section className="wallet-strip" aria-label="موجودی کیف پول">
+        <span className="wallet-strip-icon"><ServiceIllustration type="wallet" size="md" /></span>
+        <div className="wallet-strip-copy">
+          <small>موجودی کیف پول</small>
+          <strong>{balance.toLocaleString("fa-IR")} <em>تومان</em></strong>
+        </div>
+        <button className="wallet-strip-cta" type="button" onClick={() => onNavigate("wallet")}>
+          افزایش موجودی <Icon name="plus" size={15} />
+        </button>
+        <span className="wallet-strip-glow" aria-hidden="true" />
+      </section>
+
+      <LoadHero
+        ready={ready}
+        loads={pendingLoads}
+        activeCount={activeCount}
+        onNavigate={onNavigate}
+        onAccept={onAcceptLoad}
+        onReject={onRejectLoad}
+      />
+
+      <section className="main-services-section">
+        <SectionTitle
+          title="خرید لوازم یدکی"
+          caption="گیربکس، موتور و قطعات ضروری ناوگان؛ با قیمت همکار و ارسال سریع."
+          action={<button className="text-link" type="button" onClick={() => onNavigate("parts")}>همهٔ قطعات <Icon name="arrow-left" size={14} /></button>}
+        />
+        <div className="main-services-grid parts-row">
+          {partCategories.map((category, index) => (
+            <PartCategoryCard
+              key={category.key}
+              category={category}
+              delay={index * 0.35}
+              onClick={() => onOpenPart(category.key)}
+            />
+          ))}
+        </div>
+      </section>
+
+      <HeroSlider onNavigate={onNavigate} />
+
+      <section className="services-section" id="services">
+        <SectionTitle
+          title="بقیه خدمات"
+          caption="خدمات فنی، بیمه و ابزارهایی که یک امدادگر حرفه‌ای لازم دارد."
+          action={<span className="service-count"><Icon name="sparkles" size={12} /> {moreServices.length + 1} خدمت دیگر</span>}
+        />
+        <div className="services-grid">
+          {moreServices.map((service, index) => (
+            <ServiceCard key={service.id} service={service} onClick={() => onOpenService(service)} delay={index * 0.18} />
+          ))}
+          <button className="service-card service-card--more" type="button" onClick={() => onToast("به‌زودی خدمات بیشتری برای ناوگان اضافه می‌شود")}>
+            <MoreDots3D delay={0.4} />
+            <span className="service-name">بیشتر</span>
+            <span className="service-note">به‌زودی بیشتر</span>
+          </button>
+        </div>
+      </section>
+
+      <BannerStrip onNavigate={onNavigate} />
+    </div>
+  );
+}

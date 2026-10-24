@@ -3,9 +3,9 @@ import type { MetadataRoute } from "next";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: "/",
-    name: "خودرو چاره | همراه هوشمند خودرو",
-    short_name: "خودرو چاره",
-    description: "یک تماس، یک چاره؛ خدمات خودرو چاره همیشه همراه توست.",
+    name: "خودرو چاره | ناوگان امداد و سفیران",
+    short_name: "خودرو چاره ناوگان",
+    description: "دریافت بار، تالار ایرانشهر و خدمات ویژهٔ امدادگران و سفیران خودرو چاره.",
     start_url: "/",
     scope: "/",
     display: "standalone",
@@ -15,7 +15,7 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#112a38",
     lang: "fa",
     dir: "rtl",
-    categories: ["auto", "utilities", "lifestyle"],
+    categories: ["auto", "business", "productivity"],
     icons: [
       {
         src: "/icons/icon-192.png",

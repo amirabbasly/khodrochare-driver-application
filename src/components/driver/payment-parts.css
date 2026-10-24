@@ -1,0 +1,14 @@
+.search-field-group { position: relative; min-width: 0; margin-bottom: 14px; }
+.search-field-group .form-field { margin-bottom: 0; }
+.search-field-group > small { display: block; padding: 8px 4px; color: #657984; }
+.address-results { list-style: none; padding: 4px; margin: 7px 0 0; max-height: 240px; overflow-y: auto; border: 1px solid #dce5ea; border-radius: 12px; background: #fff; box-shadow: 0 8px 24px #112a3810; }
+.address-results button { width: 100%; min-height: 46px; padding: 10px 12px; border: 0; border-radius: 8px; background: transparent; text-align: right; color: #112a38; font: inherit; font-size: 13px; line-height: 1.8; cursor: pointer; }
+.address-results [aria-selected="true"] button, .address-results button:hover { background: #fff2e7; }
+.address-results button:focus-visible { outline: 2px solid #e77a29; }
+.payment-breakdown { display: grid; gap: 8px; padding: 14px; border-radius: 12px; background: #f3f7f9; font-size: 13px; line-height: 1.8; }
+.payment-breakdown span { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.bank-card-number { display: block; direction: ltr; margin: 14px 0; padding: 14px 10px; border: 1px solid #dce5ea; border-radius: 12px; text-align: center; font-size: 23px; letter-spacing: 2px; color: #112a38; }
+.parts-quote-panel { margin-block: 16px; padding: 16px; border: 1px solid #dce5ea; border-radius: 14px; }
+.parts-quote-panel p { font-size: 13px; line-height: 1.9; }
+
+.commission-confirm{display:flex;align-items:center;gap:12px;min-height:48px;cursor:pointer;font-size:14px;font-weight:700}.commission-confirm input{width:22px;height:22px;accent-color:#e8782f;flex-shrink:0}.commission-confirm:focus-within{outline:2px solid #e8782f;outline-offset:4px;border-radius:6px}

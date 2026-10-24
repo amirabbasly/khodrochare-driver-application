@@ -1,0 +1,5 @@
+import Link from 'next/link';
+import '../../components/account-polish.css';
+export default function Levels() {
+  return <main className="levels-page" dir="rtl"><Link href="/home">بازگشت به اپلیکیشن ←</Link><span className="account-tag">مسیر رشد امدادگران خودرو چاره</span><h1>از امدادگر پایه تا امدادگر ارشد</h1><p>در حال حاضر عنوان نمایش‌داده‌شده «امدادگر پایه خودرو چاره» است. ارتقای خودکار سطح هنوز فعال نشده و این صفحه مسیر پیشنهادی رشد را معرفی می‌کند.</p><div className="level-cards">{[{ name: 'امدادگر پایه', description: 'تکمیل مشخصات و مدارک، آشنایی با فرایند خدمت، ایمنی در محل و ثبت شفاف هزینه‌ها.' }, { name: 'امدادگر حرفه‌ای', description: 'تقویت مهارت فنی، شرکت در آموزش‌های تخصصی و ارائه خدمات منظم و پاسخ‌گو.' }, { name: 'امدادگر ارشد', description: 'ارزیابی تخصصی، کیفیت پایدار خدمات و توانایی همراهی و آموزش امدادگران دیگر.' }].map((level, i) => <article key={level.name}><span>{(i + 1).toLocaleString('fa-IR')}</span><h2>{level.name}</h2><p>{level.description}</p></article>)}</div><p>معیارهای قطعی، مدارک لازم و شرایط ارتقا پس از اعلام رسمی خودرو چاره در همین صفحه درج می‌شوند.</p></main>;
+}

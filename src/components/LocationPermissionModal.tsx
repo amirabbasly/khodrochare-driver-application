@@ -12,13 +12,20 @@ export function LocationPermissionModal() {
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const element = dialog.current;
-    element?.showModal();
+    try { if (localStorage.getItem('khodrochare_location_choice_v2')) return; } catch {}
+    let disposed = false;
+    async function show() {
+      try {
+        if ((await navigator.permissions.query({ name: 'geolocation' })).state === 'granted') { localStorage.setItem('khodrochare_location_choice_v2', 'granted'); window.dispatchEvent(new Event('khodrochare:location')); return; }
+      } catch {}
+      if (!disposed) { element?.showModal(); document.body.style.overflow = "hidden"; }
+    }
+    void show();
     const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const reopen = () => { if (element && !element.open) element.showModal(); };
-    window.addEventListener("pageshow", reopen);
+
+
     return () => {
-      window.removeEventListener("pageshow", reopen);
+      disposed = true;
       element?.close(); document.body.style.overflow = overflow; previous?.focus();
     };
   }, []);
@@ -27,6 +34,7 @@ export function LocationPermissionModal() {
     setBusy(true); setError("");
     try {
       const position = await currentPosition();
+      try { localStorage.setItem("khodrochare_location_choice_v2", "granted"); } catch {}
       try { sessionStorage.setItem("khodrochare_location_v1", JSON.stringify(position)); } catch {}
       window.dispatchEvent(new CustomEvent("khodrochare:location", { detail: position }));
       dialog.current?.close();
@@ -34,7 +42,7 @@ export function LocationPermissionModal() {
     } catch (error) { setError(errorMessage(error)); }
     finally { setBusy(false); }
   }
-  function close() { dialog.current?.close(); document.body.style.overflow = ""; }
+  function close() { try { localStorage.setItem("khodrochare_location_choice_v2", "dismissed"); } catch {} dialog.current?.close(); document.body.style.overflow = ""; }
   return (
     <dialog ref={dialog} className="location-permission" aria-labelledby="location-permission-title" aria-describedby="location-permission-description" dir="rtl" onCancel={close}>
       <div className="location-permission-icon"><Icon name="pin" size={30} /></div>

@@ -1,5 +1,9 @@
 "use client";
 
+import Link from "next/link";
+import { IranPlate } from "../IranPlate";
+import { BluePickup } from "../BluePickup";
+import "../account-polish.css";
 import { useState } from "react";
 import { api, getSession, uploadDocument, updateSessionUser, errorMessage, type User } from "@/lib/api";
 import { Icon } from "@/components/Icons";
@@ -19,11 +23,12 @@ import {
 const faDigits = (value: string) => value.replace(/[0-9]/g, (digit) => "۰۱۲۳۴۵۶۷۸۹"[Number(digit)]);
 
 export function PlateDisplay({ plate, compact = false }: { plate?: string; compact?: boolean }) {
-  const text = plate || "۱۲ ب ۳۴۵ - ۶۷";
+  const text = plate || "—";
+  const match = text.match(/^([0-9۰-۹]{2})\s*([آ-ی])\s*([0-9۰-۹]{3})\s*-?\s*([0-9۰-۹]{2})$/);
   return (
     <span className={`plate-badge${compact ? " plate-badge--compact" : ""}`} dir="ltr" aria-label={`پلاک خودرو ${text}`}>
       <span className="plate-badge-iran"><small>IR</small><IranFlag className="plate-flag" /><b>ایران</b></span>
-      <b className="plate-badge-text">{text}</b>
+      <b className="plate-badge-text">{match ? <><span dir="ltr">{match[1]}</span>{" "}<span dir="rtl">{match[2]}</span>{" "}<span dir="ltr">{match[3]}</span>{" - "}<span dir="ltr">{match[4]}</span></> : text}</b>
     </span>
   );
 }
@@ -43,8 +48,8 @@ export function ProfileView({
 }) {
   const name = session.name || "سفیر خودرو چاره";
   const [fullName, setFullName] = useState(name);
-  const [phone, setPhone] = useState(session.phone || session.username || "");
-  const [nationalCode, setNationalCode] = useState(session.nationalCode || "");
+  const [phone] = useState(session.phone || session.username || "");
+  const [nationalCode] = useState(session.nationalCode || "");
 
   return (
     <div className="subpage">
@@ -60,14 +65,9 @@ export function ProfileView({
           <h2>{name}</h2>
           <p dir="ltr">{session.phone || session.username || "۰۹۱۲۳۴۵۶۷۸۹"}</p>
           <div className="profile-badges">
-            <span className="profile-member"><Icon name="shield" size={13} /> سفیر تأییدشده</span>
-            <span className="profile-rating"><Icon name="star" size={13} /> ۴٫۸</span>
+            <span className="profile-member"><Icon name="shield" size={13} /> امدادگر خودرو چاره</span>
           </div>
-          <div className="profile-stats">
-            <span><b>۱۲۸</b><small>بار انجام‌شده</small></span>
-            <span><b>۴٫۸</b><small>امتیاز ناوگان</small></span>
-            <span><b>۲ سال</b><small>سابقهٔ همکاری</small></span>
-          </div>
+          <Link href="/levels" className="rescuer-membership"><div className="membership-top"><PlateDisplay plate={session.plate} /><BluePickup /></div><strong>امدادگر پایه خودرو چاره <Icon name="chevron" size={16}/></strong><small>آشنایی با مسیر ارتقا به امدادگر ارشد</small></Link>
           <div className="profile-vehicle-chip">
             <span><Icon name="car" size={15} /></span>
             <div><small>خودروی امدادی</small><strong>{session.vehicleType || "یدک‌کش / جرثقیل"}</strong></div>
@@ -98,9 +98,9 @@ export function ProfileView({
             }}
           >
             <label className="form-field"><span className="field-label">نام و نام خانوادگی</span><span className="field-control"><input value={fullName} onChange={(event) => setFullName(event.target.value)} required /></span></label>
-            <label className="form-field"><span className="field-label">شمارهٔ تماس</span><span className="field-control field-control--ltr"><input type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} dir="ltr" /></span></label>
-            <label className="form-field"><span className="field-label">کد ملی</span><span className="field-control field-control--ltr"><input inputMode="numeric" value={nationalCode} onChange={(event) => setNationalCode(event.target.value)} placeholder="۱۰ رقم" dir="ltr" /></span></label>
-            <label className="form-field"><span className="field-label">کد سفیر</span><span className="field-control field-control--ltr"><input value="SAFIR-۲۴۰۲" readOnly dir="ltr" /></span></label>
+            <label className="form-field"><span className="field-label">شمارهٔ تماس</span><span className="field-control field-control--ltr"><input type="tel" value={phone} readOnly dir="ltr" /></span></label>
+            <label className="form-field"><span className="field-label">کد ملی</span><span className="field-control field-control--ltr"><input inputMode="numeric" value={nationalCode} readOnly placeholder="۱۰ رقم" dir="ltr" /></span></label>
+            <p className="account-help">برای اصلاح شماره تماس یا کد ملی با پشتیبانی تماس بگیرید.</p>
             <button className="primary-button" type="submit">ذخیرهٔ تغییرات <Icon name="check" size={16} /></button>
           </form>
         </section>
@@ -108,7 +108,7 @@ export function ProfileView({
 
       <section className="panel-card driver-menu-list">
         <button type="button" onClick={() => onNavigate("vehicles")}><span className="settings-icon"><Icon name="car" size={18} /></span><span><strong>خودرو و پلاک من</strong><small>مشخصات خودروی امدادی و مدارک آن</small></span><Icon name="chevron" size={17} /></button>
-        <button type="button" onClick={() => onNavigate("documents")}><span className="settings-icon"><Icon name="document" size={18} /></span><span><strong>مدارک و احراز هویت</strong><small>کارت ملی، گواهینامه و بیمه‌نامه</small></span><span className="driver-menu-status">۳ از ۴</span><Icon name="chevron" size={17} /></button>
+        <button type="button" onClick={() => onNavigate("documents")}><span className="settings-icon"><Icon name="document" size={18} /></span><span><strong>مدارک و احراز هویت</strong><small>کارت ملی، گواهینامه و بیمه‌نامه</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onNavigate("training")}><span className="settings-icon"><Icon name="book" size={18} /></span><span><strong>آموزش امداد</strong><small>دوره‌های حرفه‌ای ناوگان</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onNavigate("maintenance")}><span className="settings-icon"><Icon name="refresh" size={18} /></span><span><strong>آخرین سرویس‌های من</strong><small>پروندهٔ نگهداری خودرو</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onToast("تنظیمات اعلان‌های ناوگان باز شد")}><span className="settings-icon"><Icon name="bell" size={18} /></span><span><strong>تنظیمات اعلان‌ها</strong><small>بار جدید، یادآور و پیام‌ها</small></span><Icon name="chevron" size={17} /></button>
@@ -181,7 +181,7 @@ export function VehicleView({
               </datalist>
             </label>
             <label className="form-field"><span className="field-label">مدل خودرو</span><span className="field-control"><input value={model} onChange={(event) => setModel(event.target.value)} placeholder="مثلاً ایویکو یدک‌کش" /></span></label>
-            <label className="form-field"><span className="field-label">پلاک خودرو</span><span className="field-control field-control--ltr"><input value={plate} onChange={(event) => setPlate(event.target.value)} dir="ltr" /></span></label>
+            <IranPlate value={plate} onChange={setPlate} />
           </div>
           <button className="primary-button" type="submit">ذخیرهٔ خودرو <Icon name="check" size={16} /></button>
         </form>

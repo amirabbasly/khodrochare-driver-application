@@ -9,12 +9,14 @@ export function useAuthenticatedUser() {
   useEffect(() => {
     const controller = new AbortController();
     const unauthorized = () => router.replace("/");
+    const updated = (event: Event) => setUser((event as CustomEvent<User>).detail);
+    window.addEventListener("khodrochare:user", updated);
     window.addEventListener("khodrochare:unauthorized", unauthorized);
     api<User>("/me", { signal: controller.signal }).then(user => {
       if (controller.signal.aborted) return;
       updateSessionUser(user); setUser(user);
     }).catch(() => {});
-    return () => { controller.abort(); window.removeEventListener("khodrochare:unauthorized", unauthorized); };
+    return () => { controller.abort(); window.removeEventListener("khodrochare:unauthorized", unauthorized); window.removeEventListener("khodrochare:user", updated); };
   }, [router]);
   return user;
 }

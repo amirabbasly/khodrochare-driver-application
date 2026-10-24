@@ -58,6 +58,8 @@ export type PartCategory = {
 };
 
 export type LoadOffer = {
+  operationsStartedAt?: string | null;
+  paymentStatus?: string;
   service?: string;
   partsQuoteToman?: number | null;
   partsApprovedToman?: number | null;

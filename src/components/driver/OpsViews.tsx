@@ -210,19 +210,25 @@ export function JobView({
   tracking: Tracking;
   onOpenChat: () => void;
 }) {
+  const repair = load.service === 'REPAIR';
+  const steps = repair ? ['پذیرش امداد', 'شروع مسیر', 'رسیدن به مبدأ', 'انجام عملیات', 'انجام و پرداخت شد'] : JOB_STEPS;
   const [partsAmount, setPartsAmount] = useState("");
   const [partsBusy, setPartsBusy] = useState(false);
-  const [step, setStep] = useState(load.status === "done" ? 4 : load.serverStatus === "ARRIVED" ? 2 : 1);
+  const [step, setStep] = useState(load.status === "done" ? 4 : load.operationsStartedAt ? 3 : load.serverStatus === "ARRIVED" ? 2 : 1);
 
   const [busy, setBusy] = useState(false);
   async function advance() {
     if (busy || load.status === "done") return;
     setBusy(true);
     try {
+      if (repair && load.serverStatus === 'ARRIVED') {
+        if (!load.operationsStartedAt) { await api(`/requests/${load.id}/operations/start`, { method: 'POST' }); await onPartsQuote(); setStep(3); return; }
+        await onComplete(load); setStep(4); return;
+      }
       if (step >= 3) { await onComplete(load); setStep(4); return; }
       if (step === 1 && load.serverStatus !== "ARRIVED") await onArrive(load);
       setStep(current => current + 1);
-      onToast(`وضعیت مأموریت به «${JOB_STEPS[step + 1]}» تغییر کرد.`);
+      onToast(`وضعیت مأموریت به «${steps[step + 1]}» تغییر کرد.`);
     } catch (error) { onToast(errorMessage(error)); }
     finally { setBusy(false); }
   }
@@ -230,7 +236,7 @@ export function JobView({
   return (
     <div className="subpage">
       <PageTitle
-        title={load.status === "done" ? "جزئیات بار تحویل‌شده" : "بار در حال انجام"}
+        title={repair ? "عملیات امداد خودرو" : load.status === "done" ? "جزئیات بار تحویل‌شده" : "بار در حال انجام"}
         subtitle={`${load.from} به ${load.to} · ${load.customer}`}
         onBack={onBack}
         action={<span className={`job-status ${load.status === "done" ? "is-done" : "is-active"}`}><i />{load.status === "done" ? "تحویل شد" : "در مسیر"}</span>}
@@ -269,12 +275,14 @@ export function JobView({
           </div>
 
           <p className="job-note"><Icon name="chat" size={14} /> {load.note}</p>
-          {load.service === "REPAIR" && ["ARRIVED", "COMPLETED"].includes(load.serverStatus || "") && <section className="parts-quote-panel"><h3>هزینه قطعات پس از بررسی</h3><p>مبلغ قطعات را به تومان ثبت کنید؛ اگر قطعه‌ای مصرف نشده، صفر وارد کنید. مشتری باید مبلغ را تأیید کند. کمیسیون ۳۰٪ از مجموع خدمت و قطعات محاسبه می‌شود.</p><form onSubmit={async event => { event.preventDefault(); if (partsBusy) return; setPartsBusy(true); try { await api(`/requests/${load.id}/parts-quote`, { method: "POST", body: { amountToman: Number(latinDigits(partsAmount).replace(/[,٬]/g, "")) } }); await onPartsQuote(); onToast("هزینه قطعات برای تأیید مشتری ثبت شد."); } catch (error) { onToast(errorMessage(error)); } finally { setPartsBusy(false); } }}><label className="form-field"><span className="field-label">مبلغ قطعات (تومان)</span><span className="field-control"><input value={partsAmount} onChange={event => setPartsAmount(event.target.value)} inputMode="numeric" required /></span></label><button className="primary-button" type="submit" disabled={partsBusy}>ارسال هزینه قطعات</button></form>{load.partsQuoteToman != null && <p>قطعات: {load.partsQuoteToman.toLocaleString("fa-IR")} تومان · {load.partsApprovedToman == null ? "منتظر تأیید مشتری" : "تأییدشده توسط مشتری"}</p>}</section>}
+          {load.service === "REPAIR" && ["ARRIVED", "COMPLETED"].includes(load.serverStatus || "") && <section className="parts-quote-panel"><h3>هزینه قطعات پس از بررسی</h3><p>مبلغ قطعات را به تومان ثبت کنید؛ اگر قطعه‌ای مصرف نشده، صفر وارد کنید. مشتری باید مبلغ را تأیید کند. کمیسیون ۳۰٪ از مجموع خدمت و قطعات محاسبه می‌شود.</p><form onSubmit={async event => { event.preventDefault(); if (partsBusy) return; setPartsBusy(true); try { await api(`/requests/${load.id}/parts-quote`, { method: "POST", body: { amountToman: Number(latinDigits(partsAmount).replace(/[,٬]/g, "")) } }); await onPartsQuote(); onToast("هزینه قطعات برای تأیید مشتری ثبت شد."); } catch (error) { onToast(errorMessage(error)); } finally { setPartsBusy(false); } }}><label className="form-field"><span className="field-label">مبلغ قطعات (تومان)</span><span className="field-control"><input value={partsAmount} onChange={event => { const digits = latinDigits(event.target.value).replace(/\D/g, "").slice(0, 10); setPartsAmount(digits ? Number(digits).toLocaleString("en-US") : ""); }} inputMode="numeric" required /></span></label><button className="primary-button" type="submit" disabled={partsBusy}>ثبت هزینه قطعه</button></form>{load.partsQuoteToman != null && <p>قطعات: {load.partsQuoteToman.toLocaleString("fa-IR")} تومان · {load.partsApprovedToman == null ? "منتظر تأیید مشتری" : "تأییدشده توسط مشتری"}</p>}</section>}
 
+          {repair && load.operationsStartedAt && load.paymentStatus !== 'VERIFIED' && <p role="status">عملیات آغاز شده است؛ پایان مأموریت پس از تأیید واریز ثبت می‌شود.</p>}
+          {repair && load.partsQuoteToman == null && load.serverStatus === 'ARRIVED' && <p>برای شروع عملیات، ابتدا هزینه قطعات را ثبت کنید.</p>}
           <div className="job-actions">
-            <button className="primary-button" type="button" onClick={advance} disabled={busy || load.status === "done"}>
+            <button className="primary-button" type="button" onClick={advance} disabled={busy || load.status === "done" || (repair && load.serverStatus === "ARRIVED" && (load.partsApprovedToman == null || (!!load.operationsStartedAt && load.paymentStatus !== "VERIFIED")))}>
               <Icon name={step >= 4 ? "check" : "navigation"} size={16} />
-              {load.status === "done" ? "این بار تسویه شده است" : step >= 4 ? "پایان و تسویهٔ بار" : JOB_STEPS[step + 1]}
+              {repair ? load.status === "done" ? "انجام و پرداخت شد" : load.serverStatus === "ARRIVED" ? load.operationsStartedAt ? "انجام و پرداخت شد" : "انجام عملیات" : steps[step + 1] : load.status === "done" ? "بار تکمیل شده است" : step >= 4 ? "پایان بار" : steps[step + 1]}
             </button>
             <button className="load-reject" type="button" onClick={() => onToast("برای لغو بار با پشتیبانی ناوگان تماس بگیر.")}><Icon name="phone" size={15} /> پشتیبانی</button>
           </div>
@@ -300,7 +308,7 @@ export function JobView({
           <section className="panel-card job-timeline">
             <SectionTitle title="مراحل بار" caption="پیشرفت این مأموریت" />
             <ol>
-              {JOB_STEPS.map((label, index) => (
+              {steps.map((label, index) => (
                 <li key={label} className={index <= step ? "is-done" : index === step + 1 ? "is-next" : ""}>
                   <span>{index <= step ? <Icon name="check" size={12} /> : index + 1}</span>
                   <div><strong>{label}</strong>{index <= step && <small>ثبت شد</small>}</div>

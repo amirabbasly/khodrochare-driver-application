@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { LocationTelemetry } from "@/components/LocationTelemetry";
 import { LocationPermissionModal } from "@/components/LocationPermissionModal";
 import { useRouter } from "next/navigation";
-import { logout as backendLogout, errorMessage } from "@/lib/api";
+import { api, updateSessionUser, type User, logout as backendLogout, errorMessage } from "@/lib/api";
 import { useAuthenticatedUser } from "@/lib/use-backend";
 import { useDriverFeed } from "@/lib/use-driver-feed";
 import { BrandLogo, Icon, type IconName } from "@/components/Icons";
@@ -191,7 +192,7 @@ function CustomerSheet({ load, onClose, onToast }: { load: LoadOffer; onClose: (
 export default function Dashboard() {
   const router = useRouter();
   const [view, setView] = useState<View>("home");
-  const [homeVisit, setHomeVisit] = useState(0);
+  
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -222,7 +223,7 @@ export default function Dashboard() {
   }
 
   function navigate(next: View) {
-    if (next === "home") setHomeVisit(value => value + 1);
+
     setView(next);
     setDrawerOpen(false);
     setToast("");
@@ -267,7 +268,7 @@ export default function Dashboard() {
   }
   function takePost() { notify("ثبت بار از تالار ایرانشهر هنوز در سرور فعال نشده است."); }
   function addBalance() { notify("پرداخت و کیف پول هنوز به سرور متصل نیست."); }
-  function saveProfile() { notify("ویرایش اطلاعات حساب هنوز در سرور فعال نشده است."); }
+  async function saveProfile(fullName: string) { try { const updated = await api<User>('/me', { method: 'PATCH', body: { fullName } }); updateSessionUser(updated); window.dispatchEvent(new CustomEvent('khodrochare:user', { detail: updated })); notify('نام شما ذخیره شد.'); } catch (error) { notify(errorMessage(error)); } }
   function saveVehicle() { notify("ویرایش خودروی امدادگر هنوز در سرور فعال نشده است."); }
   async function logout() {
     try { await backendLogout(); } catch (error) { notify(errorMessage(error)); }
@@ -352,7 +353,7 @@ export default function Dashboard() {
 
   return (
     <div className="app-frame" dir="rtl">
-      {user && <LocationPermissionModal key={homeVisit} />}
+      {user && <><LocationPermissionModal /><LocationTelemetry /></>}
       <header className="app-header">
         <div className="app-header-inner">
           <div className="header-menu-wrap">

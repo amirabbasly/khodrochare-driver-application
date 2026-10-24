@@ -4,7 +4,7 @@ import { APP_ROLE } from "./role";
 export const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "https://api.khodrochare.ir/api/v1").replace(/\/$/, "");
 export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || new URL(API_BASE_URL).origin;
 const SESSION_KEY = `khodrochare_${APP_ROLE.toLowerCase()}_session_v2`;
-export type Place = { id: string; label: string; city: string; street: string; latitude: number; longitude: number };
+export type Place = { province?: string; id: string; label: string; city: string; street: string; latitude: number; longitude: number };
 export type VehicleModel = { id: string; name: string; groupId: string; group: { id: string; title: string; nissanBaseToman: number | null; nissanPerKmToman: number | null; flatbedBaseToman: number | null; flatbedPerKmToman: number | null } };
 export type Payment = { id: string; status: "AWAITING_TRANSFER" | "SUBMITTED" | "VERIFIED" | "REJECTED"; cardNumber: string; accountName: string; serviceToman: number; partsToman: number; amountToman: number; commissionPercent: number; commissionToman: number; driverShareToman: number; attempts: { bankReference: string; status: string; reviewNote?: string }[] };
 export type ServiceCode = "REPAIR" | "TOWING" | "MOBILE_CARWASH" | "PERIODIC_SERVICE" | "INSPECTION";
@@ -12,7 +12,7 @@ export type Vehicle = { id: string; name: string; plate: string };
 export type User = { id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
 export type Session = { token: string; expiresAt: string; user: User };
 export type PricingBreakdown = { service: ServiceCode; baseToman: number | null; perKmToman?: number | null; distanceChargeToman?: number | null; surchargePercent?: number; totalToman: number | null; requiresAgreement: boolean; partsPricing?: string; vehicleGroup?: string; transportKind?: string };
-export type AssistanceRequest = { id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; originAddress?: string | null; destinationAddress?: string | null; partsQuoteToman?: number | null; partsQuoteVersion?: number; partsApprovedToman?: number | null; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
+export type AssistanceRequest = { operationsStartedAt?: string | null; payment?: { status: Payment["status"] } | null; id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; originAddress?: string | null; destinationAddress?: string | null; partsQuoteToman?: number | null; partsQuoteVersion?: number; partsApprovedToman?: number | null; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
 export type Tracking = { driver: { latitude: number; longitude: number; recordedAt: string } | null; stale?: boolean; distanceToOriginMeters?: number; distanceMethod?: string };
 export type DocumentRef = { id: string; token: string };
 
@@ -64,6 +64,8 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
     return `اطلاعات ${fields[String(data.issues[0].path[0])] || "فرم"} معتبر نیست.`;
   }
   const known: Record<string, string> = {
+    "Approved parts quote required before operations": "ابتدا هزینه قطعات باید ثبت و توسط مشتری تأیید شود.",
+    "Operations and verified payment required before completion": "ابتدا عملیات را شروع کنید و منتظر تأیید واریز بمانید.",
     "Address search unavailable": "جست‌وجوی آدرس موقتاً در دسترس نیست؛ دوباره تلاش کنید.",
     "Address selection expired; search again": "اعتبار آدرس انتخاب‌شده تمام شده؛ دوباره جست‌وجو کنید.",
     "Vehicle model not found": "مدل خودرو پیدا نشد؛ دوباره از فهرست انتخاب کنید.",

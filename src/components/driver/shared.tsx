@@ -58,6 +58,7 @@ export type PartCategory = {
 };
 
 export type LoadOffer = {
+  driverCommissionConfirmedAt?: string | null;
   operationsStartedAt?: string | null;
   paymentStatus?: string;
   service?: string;

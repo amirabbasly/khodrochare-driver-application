@@ -6,6 +6,7 @@ import type { LoadOffer } from "@/components/driver/shared";
 type AvailableRequest = Pick<AssistanceRequest, "id" | "service" | "vehicleName" | "originLat" | "originLng" | "destinationLat" | "destinationLng" | "distanceMeters" | "priceToman" | "createdAt">;
 export function toLoad(request: AvailableRequest & Partial<AssistanceRequest>): LoadOffer {
   return {
+    driverCommissionConfirmedAt: request.driverCommissionConfirmedAt,
     operationsStartedAt: request.operationsStartedAt, paymentStatus: request.payment?.status,
     id: request.id, customer: "مشتری خودرو چاره", role: "درخواست امداد", rating: 0, tone: 0,
     car: request.vehicleName, plate: request.vehiclePlate || "—",

@@ -12,7 +12,7 @@ export type Vehicle = { id: string; name: string; plate: string };
 export type User = { id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
 export type Session = { token: string; expiresAt: string; user: User };
 export type PricingBreakdown = { service: ServiceCode; baseToman: number | null; perKmToman?: number | null; distanceChargeToman?: number | null; surchargePercent?: number; totalToman: number | null; requiresAgreement: boolean; partsPricing?: string; vehicleGroup?: string; transportKind?: string };
-export type AssistanceRequest = { operationsStartedAt?: string | null; payment?: { status: Payment["status"] } | null; id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; originAddress?: string | null; destinationAddress?: string | null; partsQuoteToman?: number | null; partsQuoteVersion?: number; partsApprovedToman?: number | null; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
+export type AssistanceRequest = { driverCommissionConfirmedAt?: string | null; operationsStartedAt?: string | null; payment?: { status: Payment["status"] } | null; id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED"; vehicleName: string; vehiclePlate: string; originAddress?: string | null; destinationAddress?: string | null; partsQuoteToman?: number | null; partsQuoteVersion?: number; partsApprovedToman?: number | null; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
 export type Tracking = { driver: { latitude: number; longitude: number; recordedAt: string } | null; stale?: boolean; distanceToOriginMeters?: number; distanceMethod?: string };
 export type DocumentRef = { id: string; token: string };
 
@@ -64,8 +64,9 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
     return `اطلاعات ${fields[String(data.issues[0].path[0])] || "فرم"} معتبر نیست.`;
   }
   const known: Record<string, string> = {
+    "Operations must start before commission confirmation": "تأیید دریافت کمیسیون پس از شروع عملیات مجاز است.",
     "Approved parts quote required before operations": "ابتدا هزینه قطعات باید ثبت و توسط مشتری تأیید شود.",
-    "Operations and verified payment required before completion": "ابتدا عملیات را شروع کنید و منتظر تأیید واریز بمانید.",
+    "Operations and driver commission confirmation required before completion": "ابتدا عملیات را شروع کنید و دریافت کمیسیون را تأیید کنید.",
     "Address search unavailable": "جست‌وجوی آدرس موقتاً در دسترس نیست؛ دوباره تلاش کنید.",
     "Address selection expired; search again": "اعتبار آدرس انتخاب‌شده تمام شده؛ دوباره جست‌وجو کنید.",
     "Vehicle model not found": "مدل خودرو پیدا نشد؛ دوباره از فهرست انتخاب کنید.",

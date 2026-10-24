@@ -10,3 +10,5 @@
 .bank-card-number { display: block; direction: ltr; margin: 14px 0; padding: 14px 10px; border: 1px solid #dce5ea; border-radius: 12px; text-align: center; font-size: 23px; letter-spacing: 2px; color: #112a38; }
 .parts-quote-panel { margin-block: 16px; padding: 16px; border: 1px solid #dce5ea; border-radius: 14px; }
 .parts-quote-panel p { font-size: 13px; line-height: 1.9; }
+
+.commission-confirm{display:flex;align-items:center;gap:12px;min-height:48px;cursor:pointer;font-size:14px;font-weight:700}.commission-confirm input{width:22px;height:22px;accent-color:#e8782f;flex-shrink:0}.commission-confirm:focus-within{outline:2px solid #e8782f;outline-offset:4px;border-radius:6px}

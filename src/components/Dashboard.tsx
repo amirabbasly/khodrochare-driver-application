@@ -1,4 +1,6 @@
 "use client";
+import {WalletPanel} from "./WalletPanel";
+import {useWallet} from "@/lib/use-wallet";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { LocationTelemetry } from "@/components/LocationTelemetry";
@@ -16,8 +18,6 @@ import { PartsView, TechView } from "@/components/driver/StoreViews";
 import { DocumentsView, InviteView, NotificationsView, ProfileView, SupportView, TrainingView, VehicleView } from "@/components/driver/AccountViews";
 import {
   Avatar,
-  PageTitle,
-  SectionTitle,
   type DriverService,
   type DriverSession,
   type LoadOffer,
@@ -71,52 +71,6 @@ const drawerGroups: { label: string; items: { label: string; view: View; icon: I
     ],
   },
 ];
-
-const faL = (value: string) => value.replace(/[۰-۹]/g, (digit) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(digit))).replace(/[٬،,\s]/g, "");
-
-function formatMoney(value: number) {
-  return `${Math.max(0, value).toLocaleString("fa-IR")} تومان`;
-}
-
-function WalletView({ balance, onAdd, onBack }: { balance: number; onAdd: (amount: number) => void; onBack: () => void }) {
-  const [amount, setAmount] = useState("");
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const parsed = Number(faL(amount));
-    if (parsed < 10000) return;
-    onAdd(parsed);
-    setAmount("");
-  }
-
-  return (
-    <div className="subpage">
-      <PageTitle title="کیف پول" subtitle="تسویهٔ بارها و پرداخت سریع خدمات ناوگان" onBack={onBack} />
-      <div className="wallet-layout">
-        <section className="wallet-card">
-          <div className="wallet-card-top"><span className="wallet-emblem"><Icon name="wallet" size={23} /></span><span className="wallet-secure"><Icon name="shield" size={14} /> کیف پول امن ناوگان</span></div>
-          <span className="wallet-label">موجودی قابل استفاده</span>
-          <strong className="wallet-balance">{formatMoney(balance)}</strong>
-          <span className="wallet-card-foot">تسویهٔ بارها به‌صورت خودکار به این کیف پول اضافه می‌شود.</span>
-          <div className="wallet-card-orbit" />
-        </section>
-        <section className="panel-card topup-card">
-          <span className="panel-eyebrow">افزایش موجودی</span>
-          <h2>کیف پولت را شارژ کن</h2>
-          <p>مبلغ دلخواهت را وارد کن و ادامه بده.</p>
-          <form className="topup-form" onSubmit={submit}>
-            <label className="form-field"><span className="field-label">مبلغ شارژ (تومان)</span><span className="field-control"><input type="text" inputMode="numeric" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="مثلاً ۵۰۰٬۰۰۰" required dir="rtl" /></span></label>
-            <button type="submit" className="primary-button">ادامه به پرداخت <Icon name="arrow-left" size={17} /></button>
-          </form>
-        </section>
-      </div>
-      <section className="panel-card list-panel">
-        <SectionTitle title="تراکنش‌های اخیر" caption="آخرین تغییرات کیف پول تو" />
-        <div className="transaction-row"><span className="transaction-icon transaction-icon--green"><Icon name="plus" size={18} /></span><span className="transaction-info"><strong>تسویهٔ بار ناوگان</strong><small>امروز · ۱۰:۴۲</small></span><b className="money-positive">+ ۵۰۰٬۰۰۰ تومان</b></div>
-        <div className="transaction-row"><span className="transaction-icon"><Icon name="market" size={18} /></span><span className="transaction-info"><strong>خرید لوازم یدکی</strong><small>۲۴ مهر · ۱۶:۲۰</small></span><b>− ۸۵۰٬۰۰۰ تومان</b></div>
-      </section>
-    </div>
-  );
-}
 
 function AIChat({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
   const [text, setText] = useState("");
@@ -203,7 +157,8 @@ export default function Dashboard() {
   const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
   const [rejectedIds, setRejectedIds] = useState<string[]>([]);
   const feed = useDriverFeed(ready, notify);
-  const balance = feed.earnings;
+  const wallet = useWallet();
+  const balance = wallet.data?.balanceToman || 0;
   const loads = feed.loads.filter(load => load.status !== "pending" || !rejectedIds.includes(load.id));
   const activeLoad = loads.find(load => load.id === selectedLoadId) || feed.active;
   const [partFilter, setPartFilter] = useState<PartKey | "all">("all");
@@ -267,7 +222,6 @@ export default function Dashboard() {
     setSelectedLoadId(null); navigate("loads"); notify("پایان مأموریت در سرور ثبت شد.");
   }
   function takePost() { notify("ثبت بار از تالار ایرانشهر هنوز در سرور فعال نشده است."); }
-  function addBalance() { notify("پرداخت و کیف پول هنوز به سرور متصل نیست."); }
   async function saveProfile(fullName: string) { try { const updated = await api<User>('/me', { method: 'PATCH', body: { fullName } }); updateSessionUser(updated); window.dispatchEvent(new CustomEvent('khodrochare:user', { detail: updated })); notify('نام شما ذخیره شد.'); } catch (error) { notify(errorMessage(error)); } }
   function saveVehicle() { notify("ویرایش خودروی امدادگر هنوز در سرور فعال نشده است."); }
   async function logout() {
@@ -297,7 +251,7 @@ export default function Dashboard() {
         />
       );
       break;
-    case "wallet": content = <WalletView balance={balance} onAdd={addBalance} onBack={() => navigate("home")} />; break;
+    case "wallet": content = <WalletPanel onBack={() => navigate("home")} />; break;
     case "shahr": content = <IranShahrView userName={userName} onBack={() => navigate("home")} onToast={notify} onTakeLoad={takePost} />; break;
     case "profile":
       content = <ProfileView session={session} onSave={saveProfile} onBack={() => navigate("home")} onToast={notify} onNavigate={navigate} />;

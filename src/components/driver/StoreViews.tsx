@@ -1,13 +1,11 @@
 "use client";
 
-import Image from "next/image";
-import { useMemo, useState, type FormEvent } from "react";
+import { MarketStore } from "../MarketStore";
+import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
 import {
   PageTitle,
-  partCategories,
-  partProducts,
   SectionTitle,
   techServices,
   type DriverService,
@@ -16,114 +14,7 @@ import {
 
 type PartFilter = PartKey | "all";
 
-export function PartsView({
-  initialPart = "all",
-  onBack,
-  onToast,
-}: {
-  initialPart?: PartFilter;
-  onBack: () => void;
-  onToast: (message: string) => void;
-}) {
-  const [filter, setFilter] = useState<PartFilter>(initialPart);
-  const [search, setSearch] = useState("");
-  const [cart, setCart] = useState(0);
-
-  const products = useMemo(() => {
-    const term = search.trim();
-    return partProducts.filter((product) => {
-      const matchesPart = filter === "all" || product.part === filter;
-      const matchesSearch = !term || `${product.name} ${product.detail}`.includes(term);
-      return matchesPart && matchesSearch;
-    });
-  }, [filter, search]);
-
-  function addToCart(name: string) {
-    setCart((current) => current + 1);
-    onToast(`${name} به سبد خرید ناوگان اضافه شد.`);
-  }
-
-  return (
-    <div className="subpage">
-      <PageTitle
-        title="خرید لوازم یدکی"
-        subtitle="قطعات اصلی با قیمت همکاران ناوگان امداد"
-        onBack={onBack}
-        action={<button className="icon-outline-button parts-cart" type="button" onClick={() => onToast(cart ? `${cart.toLocaleString("fa-IR")} قلم در سبد خرید توست.` : "سبد خرید خالی است.")} aria-label="سبد خرید"><Icon name="market" size={18} />{cart > 0 && <i>{cart.toLocaleString("fa-IR")}</i>}</button>}
-      />
-
-      <section className="parts-hero">
-        <Image src="/slides/driver/hero-parts.jpg" alt="" fill sizes="(max-width: 900px) 100vw, 1200px" className="parts-hero-image" priority />
-        <span className="parts-hero-veil" aria-hidden="true" />
-        <div className="parts-hero-copy">
-          <span className="parts-hero-tag"><Icon name="tag" size={14} /> فروشگاه همکاران</span>
-          <h2>قطعهٔ اصل، قیمت همکار.</h2>
-          <p>گیربکس، موتور، بدنه و برق؛ ارسال به تعمیرگاه یا محل مأموریت.</p>
-        </div>
-        <div className="parts-hero-badges">
-          <span><Icon name="shield" size={14} /> اصالت قطعه</span>
-          <span><Icon name="car" size={14} /> ارسال سریع</span>
-          <span><Icon name="wallet" size={14} /> پرداخت اعتباری</span>
-        </div>
-      </section>
-
-      <div className="market-toolbar">
-        <div className="search-field">
-          <Icon name="search" size={19} />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="دنبال چه قطعه‌ای هستی؟" aria-label="جست‌وجوی قطعه" />
-        </div>
-        <button className="filter-button" type="button" onClick={() => onToast("فیلتر برند و خودرو به‌زودی اضافه می‌شود")}>
-          <Icon name="filter" size={17} /> فیلترها
-        </button>
-      </div>
-
-      <div className="category-tabs" role="tablist" aria-label="دسته‌بندی قطعات">
-        <button type="button" role="tab" aria-selected={filter === "all"} className={filter === "all" ? "is-active" : ""} onClick={() => setFilter("all")}>همهٔ قطعات</button>
-        {partCategories.map((category) => (
-          <button key={category.key} type="button" role="tab" aria-selected={filter === category.key} className={filter === category.key ? "is-active" : ""} onClick={() => setFilter(category.key)}>
-            {category.name}
-          </button>
-        ))}
-      </div>
-
-      <SectionTitle
-        title={filter === "all" ? "پیشنهادهای فروشگاه ناوگان" : partCategories.find((category) => category.key === filter)?.note ?? "قطعات"}
-        caption={`${products.length.toLocaleString("fa-IR")} قطعهٔ آمادهٔ ارسال`}
-        action={<button className="text-link" type="button" onClick={() => onToast("لیست کامل قطعات در نسخهٔ نهایی نمایش داده می‌شود")}>مشاهده همه <Icon name="arrow-left" size={14} /></button>}
-      />
-
-      <div className="part-products">
-        {products.map((product) => (
-          <article className="part-product" key={product.id}>
-            <div className={`part-product-visual part-product-visual--${product.tone}`}>
-              <span className="part-product-badge">{product.badge}</span>
-              <ServiceIllustration type={product.art} size="lg" />
-            </div>
-            <div className="part-product-info">
-              <span className="part-product-cat">{partCategories.find((category) => category.key === product.part)?.name}</span>
-              <h3>{product.name}</h3>
-              <p>{product.detail}</p>
-              <div className="part-product-bottom">
-                <strong>{product.price} <small>تومان</small>{product.oldPrice && <del>{product.oldPrice}</del>}</strong>
-                <button type="button" onClick={() => addToCart(product.name)} aria-label={`افزودن ${product.name} به سبد خرید`}><Icon name="plus" size={17} /></button>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
-
-      {products.length === 0 && (
-        <div className="panel-card loads-empty">
-          <span><Icon name="search" size={26} /></span>
-          <strong>قطعه‌ای پیدا نشد</strong>
-          <p>عبارت دیگری جست‌وجو کن یا دسته‌بندی را تغییر بده.</p>
-        </div>
-      )}
-
-      <p className="history-note"><Icon name="shield" size={18} /><span>همهٔ قطعات فروشگاه ناوگان دارای ضمانت اصالت و امکان مرجوعی تا ۷ روز هستند.</span></p>
-    </div>
-  );
-}
+export function PartsView({onBack,initialPart="all"}: {initialPart?: PartFilter;onBack:()=>void;onToast:(message:string)=>void}) {return <MarketStore onBack={onBack} initialCategory={initialPart==="all"?"":initialPart==="gearbox"?"transmission":initialPart}/>;}
 
 export function TechView({
   initialId,

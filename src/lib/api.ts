@@ -6,7 +6,7 @@ export const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || new URL(API_BASE
 const SESSION_KEY = `khodrochare_${APP_ROLE.toLowerCase()}_session_v2`;
 export type Place = { province?: string; id: string; label: string; city: string; street: string; latitude: number; longitude: number };
 export type VehicleModel = { id: string; name: string; groupId: string; group: { id: string; title: string; nissanBaseToman: number | null; nissanPerKmToman: number | null; flatbedBaseToman: number | null; flatbedPerKmToman: number | null } };
-export type Payment = { id: string; status: "AWAITING_TRANSFER" | "SUBMITTED" | "VERIFIED" | "REJECTED"; cardNumber: string; accountName: string; serviceToman: number; partsToman: number; amountToman: number; commissionPercent: number; commissionToman: number; driverShareToman: number; attempts: { bankReference: string; status: string; reviewNote?: string }[] };
+export type Payment = { gatewayMode?:"sandbox"|"live";id:string;status:"AWAITING_TRANSFER"|"SUBMITTED"|"VERIFIED"|"REJECTED"|"AWAITING_PAYMENT"|"GATEWAY_PENDING"|"SANDBOX_VERIFIED"|"REFUND_REQUIRED";serviceToman:number;partsToman:number;amountToman:number;commissionPercent:number;commissionToman:number;driverShareToman:number };
 export type ServiceCode = "REPAIR" | "TOWING" | "MOBILE_CARWASH" | "PERIODIC_SERVICE" | "INSPECTION";
 export type Vehicle = { id: string; name: string; plate: string };
 export type User = { id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
@@ -64,6 +64,10 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
     return `اطلاعات ${fields[String(data.issues[0].path[0])] || "فرم"} معتبر نیست.`;
   }
   const known: Record<string, string> = {
+    "SMS provider not configured": "سرویس پیامک هنوز فعال نیست؛ هشدار داخل برنامه را بدون گزینه پیامک ثبت کنید.",
+    "Market product not found": "این قطعه پیدا نشد یا دیگر فعال نیست.",
+    "Market alert not found": "هشدار قیمت پیدا نشد.",
+    "Market record already exists": "این رکورد قبلاً ثبت شده است.",
     "Operations must start before commission confirmation": "تأیید دریافت کمیسیون پس از شروع عملیات مجاز است.",
     "Approved parts quote required before operations": "ابتدا هزینه قطعات باید ثبت و توسط مشتری تأیید شود.",
     "Operations and driver commission confirmation required before completion": "ابتدا عملیات را شروع کنید و دریافت کمیسیون را تأیید کنید.",
@@ -73,7 +77,14 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
     "Parts quote must be approved before payment": "ابتدا امدادگر باید هزینه قطعات را پس از بررسی ثبت کند و شما آن را تأیید کنید.",
     "Final service amount requires agreement": "ابتدا مبلغ نهایی خدمت باید مشخص و توافق شود.",
     "Bank reference already used": "این شماره پیگیری قبلاً ثبت شده است.",
-    "Contact support for payment refund before cancellation": "واریز شما ثبت شده است؛ برای لغو و پیگیری وجه با پشتیبانی تماس بگیرید.",
+    "Payment gateway unavailable": "ارتباط با زرین‌پال برقرار نشد؛ دوباره تلاش کنید.",
+    "Payment gateway is not configured": "درگاه واقعی هنوز تنظیم نشده است.",
+    "Payment gateway rejected the request": "زرین‌پال درخواست پرداخت را نپذیرفت.",
+    "Payment request is being created": "درخواست پرداخت در حال ساخت است؛ چند لحظه دیگر تلاش کنید.",
+    "Payment was not verified": "پرداخت هنوز توسط زرین‌پال تأیید نشده است.",
+    "Payment is already verified": "این پرداخت قبلاً تأیید شده است.",
+    "Finish the existing payment attempt first": "ابتدا پرداخت قبلی را تکمیل یا لغو کنید.",
+    "Contact support for payment refund before cancellation": "پرداخت شما ثبت شده یا در جریان است؛ برای لغو و پیگیری وجه با پشتیبانی تماس بگیرید.",
     "Parts quote requires inspection": "ثبت هزینه قطعات پس از رسیدن امدادگر و بررسی خودرو مجاز است.",
     "Parts quote changed; reload": "هزینه قطعات تغییر کرده؛ مبلغ جدید را بررسی کنید.",
     "Payment amount is already locked": "اطلاعات پرداخت صادر شده و تغییر مبلغ ممکن نیست؛ با پشتیبانی تماس بگیرید.",

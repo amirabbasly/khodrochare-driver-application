@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { PwaBootstrap, SplashGate } from "@/components/AppExperience";
+import { SessionProvider } from "@/lib/session";
+import { AppZoomGuard } from "@/components/AppZoomGuard";
 import "./globals.css";
 import "./driver.css";
 
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     title: "خودرو چاره ناوگان",
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
   },
   icons: {
     icon: [
@@ -27,14 +29,19 @@ export const viewport: Viewport = {
   colorScheme: "light",
   width: "device-width",
   initialScale: 1,
+  minimumScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "auto",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
       <body>
+        <AppZoomGuard />
         <PwaBootstrap />
-        <SplashGate>{children}</SplashGate>
+        <SessionProvider><SplashGate>{children}</SplashGate></SessionProvider>
       </body>
     </html>
   );

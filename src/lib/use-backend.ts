@@ -1,44 +1,40 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { api, openSocket, updateSessionUser, type AssistanceRequest, type Tracking, type User } from "./api";
+import { useEffect, useRef, useState } from "react";
+import { api, openSocket, type AssistanceRequest, type Tracking } from "./api";
+import { useSessionState } from "./session";
 
 export function useAuthenticatedUser() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  useEffect(() => {
-    const controller = new AbortController();
-    const unauthorized = () => router.replace("/");
-    const updated = (event: Event) => setUser((event as CustomEvent<User>).detail);
-    window.addEventListener("khodrochare:user", updated);
-    window.addEventListener("khodrochare:unauthorized", unauthorized);
-    api<User>("/me", { signal: controller.signal }).then(user => {
-      if (controller.signal.aborted) return;
-      updateSessionUser(user); setUser(user);
-    }).catch(() => {});
-    return () => { controller.abort(); window.removeEventListener("khodrochare:unauthorized", unauthorized); window.removeEventListener("khodrochare:user", updated); };
-  }, [router]);
-  return user;
+  return useSessionState().user;
 }
 
-export function useLiveRequest(id: string) {
+export function useLiveRequest(id: string, initialRequest?: AssistanceRequest) {
+  const initial = useRef(initialRequest);
+  useEffect(() => { initial.current = initialRequest; }, [initialRequest]);
   const [request, setRequest] = useState<AssistanceRequest | null>(null);
   const [tracking, setTracking] = useState<Tracking>({ driver: null });
   useEffect(() => {
     const controller = new AbortController();
     let running = false;
+    let confirmed = initial.current?.id === id ? initial.current : null;
     async function refresh() {
       if (running) return;
       running = true;
+      const trackingController = new AbortController();
+      const trackingSignal = AbortSignal.any([controller.signal, trackingController.signal]);
+      const readTracking = () => api<Tracking>(`/requests/${encodeURIComponent(id)}/tracking`, { signal: trackingSignal }).catch(() => null);
+      // The existing screen already has an authenticated request snapshot.
+      // Read in parallel, but publish GPS only after fresh request authorization.
+      const pendingTracking = confirmed && !["COMPLETED", "CANCELLED"].includes(confirmed.status) ? readTracking() : null;
       try {
         const current = await api<AssistanceRequest>(`/requests/${encodeURIComponent(id)}`, { signal: controller.signal });
         if (controller.signal.aborted) return;
+        confirmed = current;
         setRequest(current);
         if (current.status === "COMPLETED" || current.status === "CANCELLED") { setTracking({ driver: null }); return; }
-        const next = await api<Tracking>(`/requests/${encodeURIComponent(id)}/tracking`, { signal: controller.signal });
-        if (!controller.signal.aborted) setTracking(next);
+        const next = await (pendingTracking || readTracking());
+        if (next && !controller.signal.aborted) setTracking(next);
       } catch { /* Keep the last confirmed status; stale GPS is hidden below. */ }
-      finally { running = false; }
+      finally { trackingController.abort(); running = false; }
     }
     const socket = openSocket();
     socket.on("connect", refresh);

@@ -1,6 +1,7 @@
 "use client";
 import './payment-parts.css';
 
+import type {PendingLoadAction} from "@/lib/use-driver-feed";
 import { useState, type FormEvent } from "react";
 import { Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
@@ -25,8 +26,10 @@ export function LoadsView({
   onReject,
   onOpenJob,
   onProfile,
+  pendingAction,
 }: {
   loads: LoadOffer[];
+  pendingAction?: PendingLoadAction|null;
   onBack: () => void;
   onToast: (message: string) => void;
   onAccept: (load: LoadOffer) => void;
@@ -79,6 +82,7 @@ export function LoadsView({
             <LoadOfferCard
               key={load.id}
               load={load}
+            pendingAction={pendingAction}
               onAccept={() => (load.status === "pending" ? onAccept(load) : onOpenJob(load))}
               acceptLabel={load.status === "pending" ? "تأیید بار" : load.status === "active" ? "ادامهٔ بار" : "مشاهدهٔ جزئیات"}
               onReject={load.status === "pending" ? () => onReject(load) : undefined}

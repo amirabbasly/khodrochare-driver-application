@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
+import { useSessionState } from "@/lib/session";
 import "@/components/driver/service-picker.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { api, type User, login, register, saveSession, normalizePhone, uploadDocument, errorMessage } from "@/lib/api";
+import { login, register, saveSession, normalizePhone, uploadDocument, errorMessage } from "@/lib/api";
 import { BrandLogo, Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
 import { IranFlag, providerServices, vehicleSuggestions } from "@/components/driver/shared";
@@ -341,11 +342,7 @@ function DocumentUpload({
 
 export function LoginScreen() {
   const router = useRouter();
-  useEffect(() => {
-    const controller = new AbortController();
-    api<User>("/me", { signal: controller.signal }).then(() => { if (!controller.signal.aborted) router.replace("/home"); }).catch(() => {});
-    return () => controller.abort();
-  }, [router]);
+  const {authenticate} = useSessionState();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
@@ -361,6 +358,7 @@ export function LoginScreen() {
     try {
       const session = await login(username, password, remember);
       saveSession(session, remember);
+      authenticate(session.user);
       router.replace("/home");
     } catch (error) { setError(errorMessage(error)); }
     finally { setBusy(false); }
@@ -398,11 +396,7 @@ export function LoginScreen() {
 
 export function RegisterScreen() {
   const router = useRouter();
-  useEffect(() => {
-    const controller = new AbortController();
-    api<User>("/me", { signal: controller.signal }).then(() => { if (!controller.signal.aborted) router.replace("/home"); }).catch(() => {});
-    return () => controller.abort();
-  }, [router]);
+  const {authenticate} = useSessionState();
   const [name, setName] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [plate, setPlate] = useState({ two: "", letter: "ب", three: "", province: "" });
@@ -485,6 +479,7 @@ export function RegisterScreen() {
       const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
       const session = await register({ fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
       saveSession(session, true);
+      authenticate(session.user);
       router.replace("/home");
     } catch (error) { setError(errorMessage(error)); }
     finally { setBusy(false); }

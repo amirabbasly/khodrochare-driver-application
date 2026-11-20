@@ -1,8 +1,9 @@
 "use client";
+import {AssistantChat} from "./AssistantChat";
 import {WalletPanel} from "./WalletPanel";
 import {useWallet} from "@/lib/use-wallet";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { LocationTelemetry } from "@/components/LocationTelemetry";
 import { LocationPermissionModal } from "@/components/LocationPermissionModal";
 import { useRouter } from "next/navigation";
@@ -10,7 +11,6 @@ import { api, updateSessionUser, type User, logout as backendLogout, errorMessag
 import { useAuthenticatedUser } from "@/lib/use-backend";
 import { useDriverFeed } from "@/lib/use-driver-feed";
 import { BrandLogo, Icon, type IconName } from "@/components/Icons";
-import { AiMascot } from "@/components/Artwork";
 import { HomeView } from "@/components/driver/HomeView";
 import { IranShahrView } from "@/components/driver/IranShahrView";
 import { JobView, LoadsView, MaintenanceView, ReadinessView } from "@/components/driver/OpsViews";
@@ -72,49 +72,6 @@ const drawerGroups: { label: string; items: { label: string; view: View; icon: I
   },
 ];
 
-function AIChat({ open, setOpen }: { open: boolean; setOpen: (open: boolean) => void }) {
-  const [text, setText] = useState("");
-  const [messages, setMessages] = useState([{ from: "bot", text: "سلام! من چاره‌یار ناوگانم. برای بار، قطعه یا خدمات خودروی امدادی‌ات چه کمکی می‌کنم؟" }]);
-
-  function send(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!text.trim()) return;
-    const question = text.trim();
-    setMessages((items) => [
-      ...items,
-      { from: "user", text: question },
-      { from: "bot", text: "حتماً! برای راهنمایی دقیق‌تر از تالار ایرانشهر بار آزاد را ببین یا موضوعت را با کارشناس ناوگان در میان بگذار." },
-    ]);
-    setText("");
-  }
-
-  return (
-    <>
-      {open && (
-        <section className="chat-window" aria-label="گفت‌وگو با چاره‌یار">
-          <div className="chat-header">
-            <span className="chat-avatar"><span>AI</span></span>
-            <div><strong>چاره‌یار ناوگان</strong><small><i />همراه هوشمند امدادگران</small></div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="بستن گفت‌وگو"><Icon name="close" size={19} /></button>
-          </div>
-          <div className="chat-messages">
-            {messages.map((message, index) => <p key={`${message.from}-${index}`} className={`chat-bubble${message.from === "user" ? " chat-bubble--user" : ""}`}>{message.text}</p>)}
-          </div>
-          <form className="chat-input-row" onSubmit={send}>
-            <input value={text} onChange={(event) => setText(event.target.value)} placeholder="پیامت را بنویس…" aria-label="پیام شما" />
-            <button type="submit" aria-label="ارسال پیام"><Icon name="send" size={17} /></button>
-          </form>
-          <div className="chat-demo-note">همراه هوشمند ناوگان امداد</div>
-        </section>
-      )}
-      <button className={`ai-fab${open ? " ai-fab--open" : ""}`} type="button" onClick={() => setOpen(!open)} aria-label={open ? "بستن چاره‌یار" : "گفت‌وگو با هوش مصنوعی"}>
-        <span className="ai-fab-mascot"><AiMascot /></span>
-        <span className="ai-fab-copy">چاره‌یار <small>پشتیبانی هوشمند ناوگان</small></span>
-        {open && <Icon name="close" size={18} />}
-      </button>
-    </>
-  );
-}
 
 function CustomerSheet({ load, onClose, onToast }: { load: LoadOffer; onClose: () => void; onToast: (message: string) => void }) {
   return (
@@ -214,6 +171,7 @@ export default function Dashboard() {
     if (await feed.accept(load)) { setSelectedLoadId(load.id); navigate("job"); notify("درخواست با موفقیت پذیرفته شد."); }
   }
   function rejectLoad(load: LoadOffer) {
+    if (feed.pendingAction) return;
     setRejectedIds(ids => [...ids, load.id]);
     notify("این درخواست از فهرست شما کنار گذاشته شد.");
   }
@@ -238,6 +196,7 @@ export default function Dashboard() {
     case "home":
       content = (
         <HomeView
+          pendingAction={feed.pendingAction}
           balance={balance}
           ready={ready}
           pendingLoads={pendingLoads}
@@ -259,6 +218,7 @@ export default function Dashboard() {
     case "loads":
       content = (
         <LoadsView
+          pendingAction={feed.pendingAction}
           loads={loads}
           onBack={() => navigate("home")}
           onToast={notify}
@@ -273,7 +233,7 @@ export default function Dashboard() {
     case "job":
       content = activeLoad
         ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onPartsQuote={async () => { await feed.refresh(); }} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
-        : <LoadsView loads={loads} onBack={() => navigate("home")} onToast={notify} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
+        : <LoadsView pendingAction={feed.pendingAction} loads={loads} onBack={() => navigate("home")} onToast={notify} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
       break;
     case "parts":
       content = <PartsView key={partFilter} initialPart={partFilter} onBack={() => navigate("home")} onToast={notify} />;
@@ -291,6 +251,7 @@ export default function Dashboard() {
     default:
       content = (
         <HomeView
+          pendingAction={feed.pendingAction}
           balance={balance}
           ready={ready}
           pendingLoads={pendingLoads}
@@ -384,7 +345,7 @@ export default function Dashboard() {
         </div>
       </aside>
 
-      <AIChat open={chatOpen} setOpen={setChatOpen} />
+      <AssistantChat open={chatOpen} setOpen={setChatOpen} title="چاره‌یار ناوگان" subtitle="راهنمای هوشمند امدادگران" />
       {customerSheet && <CustomerSheet load={customerSheet} onClose={() => setCustomerSheet(null)} onToast={notify} />}
       {toast && <div className="toast-message" role="status"><span><Icon name="check" size={17} /></span>{toast}<button type="button" onClick={() => setToast("")} aria-label="بستن پیام"><Icon name="close" size={15} /></button></div>}
     </div>

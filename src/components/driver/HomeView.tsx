@@ -1,4 +1,5 @@
 "use client";
+import type {PendingLoadAction} from "@/lib/use-driver-feed";
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -114,6 +115,7 @@ export function LoadOfferCard({
   onProfile,
   acceptLabel = "تأیید بار",
   compact = false,
+  pendingAction,
 }: {
   load: LoadOffer;
   onAccept: () => void;
@@ -121,6 +123,7 @@ export function LoadOfferCard({
   onProfile?: () => void;
   acceptLabel?: string;
   compact?: boolean;
+  pendingAction?: PendingLoadAction|null;
 }) {
   return (
     <article className={`load-offer${compact ? " load-offer--compact" : ""}`}>
@@ -159,8 +162,8 @@ export function LoadOfferCard({
       {!compact && <p className="load-note">{load.note}</p>}
 
       <div className="load-offer-actions">
-        <button className="load-accept" type="button" onClick={onAccept}><Icon name="check" size={16} /> {acceptLabel}</button>
-        {onReject && <button className="load-reject" type="button" onClick={onReject}><Icon name="close" size={15} /> رد کردن</button>}
+        <button className="load-accept" type="button" disabled={Boolean(pendingAction)} aria-busy={pendingAction?.id===load.id} onClick={onAccept}><Icon name="check" size={16} /> {pendingAction?.id===load.id?(pendingAction.phase==='location'?'دریافت موقعیت…':'در حال پذیرش…'):acceptLabel}</button>
+        {onReject && <button className="load-reject" type="button" disabled={Boolean(pendingAction)} onClick={onReject}><Icon name="close" size={15} /> رد کردن</button>}
         {onProfile && <button className="load-profile" type="button" onClick={onProfile}><Icon name="user" size={15} /> پروفایل</button>}
       </div>
     </article>
@@ -173,6 +176,7 @@ function LoadHero({
   ready,
   loads,
   activeCount,
+  pendingAction,
   onNavigate,
   onAccept,
   onReject,
@@ -180,6 +184,7 @@ function LoadHero({
   ready: boolean;
   loads: LoadOffer[];
   activeCount: number;
+  pendingAction?: PendingLoadAction|null;
   onNavigate: (view: View) => void;
   onAccept: (load: LoadOffer) => void;
   onReject: (load: LoadOffer) => void;
@@ -188,14 +193,14 @@ function LoadHero({
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!ready || total === 0) return;
+    if (!ready || total === 0 || pendingAction) return;
     const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
     return () => window.clearInterval(timer);
-  }, [ready, total]);
+  }, [ready, total, pendingAction]);
 
   const index = total > 0 ? Math.floor(tick / ROTATE_SECONDS) % total : 0;
   const seconds = ROTATE_SECONDS - (tick % ROTATE_SECONDS);
-  const current = total > 0 ? loads[index] : null;
+  const current = loads.find(load=>load.id===pendingAction?.id) || (total > 0 ? loads[index] : null);
   const progress = Math.round((seconds / ROTATE_SECONDS) * 100);
   const isCarry = current ? current.weight.startsWith("حمل") : false;
 
@@ -284,15 +289,15 @@ function LoadHero({
             <button
               className="lh-accept"
               type="button"
-              disabled={!ready}
+              disabled={!ready || Boolean(pendingAction)}
               onClick={() => onAccept(current)}
             >
-              <Icon name="check" size={17} /> تأیید و گرفتن بار
+              <Icon name="check" size={17} /> {pendingAction?.id===current.id?(pendingAction.phase==='location'?'دریافت موقعیت…':'در حال پذیرش…'):'تأیید و گرفتن بار'}
             </button>
             <button
               className="lh-cancel"
               type="button"
-              disabled={!ready}
+              disabled={!ready || Boolean(pendingAction)}
               onClick={() => onReject(current)}
             >
               <Icon name="close" size={16} /> اعلام کنسلی
@@ -309,6 +314,7 @@ export function HomeView({
   ready,
   pendingLoads,
   activeCount,
+  pendingAction,
   onNavigate,
   onToast,
   onAcceptLoad,
@@ -320,6 +326,7 @@ export function HomeView({
   ready: boolean;
   pendingLoads: LoadOffer[];
   activeCount: number;
+  pendingAction?: PendingLoadAction|null;
   onNavigate: (view: View) => void;
   onToast: (message: string) => void;
   onAcceptLoad: (load: LoadOffer) => void;
@@ -345,6 +352,7 @@ export function HomeView({
         ready={ready}
         loads={pendingLoads}
         activeCount={activeCount}
+        pendingAction={pendingAction}
         onNavigate={onNavigate}
         onAccept={onAcceptLoad}
         onReject={onRejectLoad}

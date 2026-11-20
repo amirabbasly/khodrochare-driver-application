@@ -17,7 +17,7 @@ export type Tracking = { driver: { latitude: number; longitude: number; recorded
 export type DocumentRef = { id: string; token: string };
 
 export class ApiError extends Error {
-  constructor(message: string, public status: number) { super(message); }
+  constructor(message: string, public status: number, public code?: string) { super(message); }
 }
 export const latinDigits = (v: string) => v.replace(/[۰-۹٠-٩]/g, d => String("۰۱۲۳۴۵۶۷۸۹".includes(d) ? "۰۱۲۳۴۵۶۷۸۹".indexOf(d) : "٠١٢٣٤٥٦٧٨٩".indexOf(d)));
 export function normalizePhone(v: string) {
@@ -100,11 +100,11 @@ function serverMessage(status: number, data: { error?: string; issues?: { path: 
   if (data.error && known[data.error]) return known[data.error];
   return ({ 400: "اطلاعات ارسالی معتبر نیست.", 401: "نشست شما پایان یافته است؛ دوباره وارد شوید.", 403: "دسترسی به این عملیات مجاز نیست.", 404: "اطلاعات موردنظر پیدا نشد.", 409: "اطلاعات تغییر کرده است؛ دوباره بررسی کنید.", 429: "درخواست‌های زیادی ارسال شده؛ کمی صبر کنید.", 503: "سرویس موقتاً در دسترس نیست؛ دوباره تلاش کنید." } as Record<number, string>)[status] || "ارتباط با سرور با خطا روبه‌رو شد.";
 }
-export async function api<T>(route: string, options: { method?: string; body?: unknown; auth?: boolean; signal?: AbortSignal; responseType?: "blob" } = {}): Promise<T> {
-  const { auth = true, method = "GET", body, signal } = options;
+export async function api<T>(route: string, options: { method?: string; body?: unknown; auth?: boolean; signal?: AbortSignal; responseType?: "blob"; timeoutMs?: number } = {}): Promise<T> {
+  const { auth = true, method = "GET", body, signal, timeoutMs = 20000 } = options;
   const session = auth ? getSession() : null;
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const response = await fetch(`${API_BASE_URL}${route}`, { method, cache: "no-store", credentials: "include", headers: { "X-App-Role": APP_ROLE, "X-Session-Persistence": localStorage.getItem(SESSION_KEY) ? "persistent" : session ? "browser" : "persistent", ...(body instanceof FormData ? {} : body === undefined ? {} : { "Content-Type": "application/json" }), ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}) }, body: body instanceof FormData ? body : body === undefined ? undefined : JSON.stringify(body), signal: signal ? AbortSignal.any([signal, controller.signal]) : controller.signal });
     const data = response.status === 204 ? undefined : response.ok && options.responseType === "blob" ? await response.blob() : await response.json();
@@ -113,7 +113,7 @@ export async function api<T>(route: string, options: { method?: string; body?: u
         clearSession();
         window.dispatchEvent(new Event("khodrochare:unauthorized"));
       }
-      throw new ApiError(serverMessage(response.status, data || {}), response.status);
+      throw new ApiError(serverMessage(response.status, data || {}), response.status, data?.error);
     }
     if (auth && response.ok) {
       const expiresAt = response.headers.get("X-Session-Expires-At");
@@ -140,7 +140,7 @@ export async function uploadDocument(file: File): Promise<DocumentRef> {
   return { id, token };
 }
 export async function logout() {
-  try { await api("/auth/logout", { method: "POST" }); } finally { clearSession(); }
+  try { await api("/auth/logout", { method: "POST" }); } finally { clearSession(); window.dispatchEvent(new Event("khodrochare:unauthorized")); }
 }
 export const errorMessage = (error: unknown) => error instanceof Error ? error.message : "عملیات انجام نشد؛ دوباره تلاش کنید.";
 export const requestStatus = (s: AssistanceRequest["status"]) => ({ PENDING: "در انتظار امدادگر", ACCEPTED: "امدادگر در مسیر شماست", ARRIVED: "امدادگر به مبدأ رسیده است", COMPLETED: "درخواست انجام شد", CANCELLED: "درخواست لغو شد" })[s];

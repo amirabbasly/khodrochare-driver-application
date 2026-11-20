@@ -39,7 +39,7 @@ export function SplashGate({ children }: { children: ReactNode }) {
           <div className="splash-content">
             <div className="splash-logo-wrap">
               <Image
-                src="/khodrochare-3d-logo.webp"
+                src="/khodrochare-wordmark.png"
                 alt="لوگوی خودرو چاره"
                 width={2172}
                 height={724}

@@ -132,7 +132,7 @@ export function BrandLogo({ compact = false, light = false }: { compact?: boolea
   return (
     <div className={`brand-lockup${compact ? " brand-lockup--compact" : ""}${light ? " brand-lockup--light" : ""}`} dir="rtl">
       <Image
-        src="/khodrochare-3d-logo.webp"
+        src="/khodrochare-wordmark.png"
         alt="لوگوی خودرو چاره"
         width={2172}
         height={724}

@@ -48,7 +48,7 @@ function AuthVisual({ variant = "login" }: { variant?: "login" | "register" }) {
         <span className="auth-driver-veil" aria-hidden="true" />
         <div className="auth-driver-logo">
           <Image
-            src="/khodrochare-3d-logo.webp"
+            src="/khodrochare-wordmark.png"
             alt="لوگوی خودرو چاره"
             width={2172}
             height={724}
@@ -78,7 +78,7 @@ function AuthVisual({ variant = "login" }: { variant?: "login" | "register" }) {
     <aside className="auth-visual" aria-label="پیام خودرو چاره">
       <div className="auth-logo-frame">
         <Image
-          src="/khodrochare-3d-logo.webp"
+          src="/khodrochare-wordmark.png"
           alt="لوگوی خودرو چاره"
           width={2172}
           height={724}

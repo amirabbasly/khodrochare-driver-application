@@ -1,12 +1,11 @@
-const CACHE_NAME = "khodro-chare-fleet-v5";
+const CACHE_NAME = "khodro-chare-fleet-v6";
 const APP_SHELL = [
   "/",
   "/register",
   "/home",
   "/offline.html",
-  "/khodrochare-3d-logo.webp",
-  "/icons/icon-192.png",
-  "/icons/icon-512.png",
+  "/khodrochare-wordmark.png",
+  "/khodrochare-symbol.png",
   "/fonts/Vazir.woff2",
   "/fonts/Vazir-Medium.woff2",
   "/fonts/Vazir-Bold.woff2",

@@ -1,0 +1,12 @@
+.assistant-chat-window{display:flex;flex-direction:column;height:500px;max-height:min(560px,calc(100dvh - 140px));isolation:isolate}
+.assistant-chat-window .chat-messages{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.assistant-chat-window .chat-bubble{white-space:pre-wrap;overflow-wrap:anywhere}
+.assistant-chat-window .chat-header,.assistant-chat-window .chat-input-row,.assistant-footer{flex-shrink:0}
+.assistant-chat-window .chat-header small{font-size:10px}
+.assistant-thinking{font-size:12px;color:#5d7280;padding:8px}
+.assistant-error{padding:10px 16px;background:#fff2e9;color:#9d3e1c;font-size:12px;max-height:130px;overflow:auto}
+.assistant-error p{margin:0;line-height:1.9}.assistant-error button{min-height:44px;background:#fff;border:1px solid #eccdb9;border-radius:10px;padding:6px 16px;color:#953f1e;margin-top:6px;cursor:pointer}
+.assistant-footer{padding:10px 14px;border-top:1px solid #e3ebef;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:#f9fbfc;font-size:10px;color:#657d8a}
+.assistant-footer a{color:#173849;text-decoration:none}.assistant-footer b{display:inline-block;font-size:11px}
+.assistant-chat-window button:disabled{opacity:.55;cursor:wait}.assistant-chat-window :focus-visible{outline:3px solid #ed6a20;outline-offset:2px}
+@media(max-width:600px){.assistant-chat-window{max-height:calc(100dvh - 140px)}.assistant-footer{font-size:9px}}

@@ -1,14 +1,33 @@
 "use client";
 
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import { useSessionState } from "@/lib/session";
 import { useEffect, useState, type ReactNode } from "react";
 
-const splashMessage = "یک تماس، یک چاره؛ خودرو چاره";
+const splashMessage = "بار بگیر، مسیر بساز؛ خودرو چاره";
 
 export function SplashGate({ children }: { children: ReactNode }) {
   const [visible, setVisible] = useState(true);
-  const [leaving, setLeaving] = useState(false);
+  const [minimumElapsed, setMinimumElapsed] = useState(false);
   const [typedMessage, setTypedMessage] = useState("");
+  const {status,error,retry} = useSessionState();
+  const pathname = usePathname(), router = useRouter();
+  const authPage = pathname === "/" || pathname === "/register";
+  const redirecting = status === "authenticated" && authPage || status === "anonymous" && pathname === "/home";
+  const holding = status === "checking" || status === "error" || redirecting;
+  const leaving = visible && minimumElapsed && !holding;
+
+  useEffect(() => {
+    if (status === "authenticated" && (pathname === "/" || pathname === "/register")) router.replace("/home");
+    else if (status === "anonymous" && pathname === "/home") router.replace("/");
+  }, [pathname,status,router]);
+
+  useEffect(() => {
+    if (!visible || !minimumElapsed || holding) return;
+    const timer = window.setTimeout(() => setVisible(false),500);
+    return () => window.clearTimeout(timer);
+  }, [visible,minimumElapsed,holding]);
 
   useEffect(() => {
     let character = 0;
@@ -17,20 +36,18 @@ export function SplashGate({ children }: { children: ReactNode }) {
       setTypedMessage(splashMessage.slice(0, character));
       if (character >= splashMessage.length) window.clearInterval(typingTimer);
     }, 72);
-    const fadeTimer = window.setTimeout(() => setLeaving(true), 2850);
-    const closeTimer = window.setTimeout(() => setVisible(false), 3350);
+    const minimumTimer = window.setTimeout(() => setMinimumElapsed(true), 2850);
 
     return () => {
       window.clearInterval(typingTimer);
-      window.clearTimeout(fadeTimer);
-      window.clearTimeout(closeTimer);
+      window.clearTimeout(minimumTimer);
     };
   }, []);
 
   return (
     <>
-      {children}
-      {visible && (
+      {!holding && children}
+      {(visible || holding) && (
         <div className={`launch-splash${leaving ? " launch-splash--leaving" : ""}`} role="status" aria-label="خودرو چاره در حال آماده‌سازی است" dir="rtl">
           <div className="splash-backdrop-glow splash-backdrop-glow--one" />
           <div className="splash-backdrop-glow splash-backdrop-glow--two" />
@@ -39,7 +56,7 @@ export function SplashGate({ children }: { children: ReactNode }) {
           <div className="splash-content">
             <div className="splash-logo-wrap">
               <Image
-                src="/khodrochare-3d-logo.webp"
+                src="/khodrochare-wordmark.png"
                 alt="لوگوی خودرو چاره"
                 width={2172}
                 height={724}
@@ -49,15 +66,16 @@ export function SplashGate({ children }: { children: ReactNode }) {
               />
             </div>
             <p className="splash-type-line" aria-live="polite"><span>{typedMessage}</span><i className="splash-cursor" /></p>
-            <p className="splash-subtitle">اگر تو راه موندی و عجله داری، سریع تماس بگیر.</p>
+            <p className="splash-subtitle">شبکهٔ امدادگران و سفیران خودرو چاره؛ همیشه در راه.</p>
             <a className="splash-phone" href="tel:02191855" dir="ltr" aria-label="تماس با خودرو چاره: ۰۲۱ ۹۱۸۵۵">
               <span className="splash-phone-prefix">۰۲۱</span>
               <span className="splash-phone-dash">-</span>
               <strong className="splash-phone-number">۹۱۸۵۵</strong>
             </a>
             <div className="splash-loader" aria-hidden="true"><span /></div>
+            {status === "error" && <div className="splash-session-error"><p role="alert">{error}</p><button type="button" onClick={retry}>تلاش دوباره</button></div>}
           </div>
-          <span className="splash-footer">همراه مطمئن تو در هر مسیر</span>
+          <span className="splash-footer">همراه ناوگان امداد در هر مسیر</span>
         </div>
       )}
     </>

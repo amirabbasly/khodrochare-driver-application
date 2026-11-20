@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# خودرو چاره · اپلیکیشن ناوگان امداد و سفیران
 
-## Getting Started
+نسخهٔ مخصوص امدادگران، یدک‌کش‌ها و سفیران خودرو چاره. این اپ نسخهٔ کاربران عادی نیست؛
+تمام جریان‌ها حول دریافت بار، آمادگی، تسویه و خدمات فنی ناوگان طراحی شده‌اند.
 
-First, run the development server:
+## اجرا
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+سپس `http://localhost:3000` را باز کن (یا از پیش‌نمایش زندهٔ محیط استفاده کن).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## مسیرها
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| مسیر | توضیح |
+| --- | --- |
+| `/` | ورود ناوگان (بدون تغییر در طراحی، متن‌ها مخصوص امدادگران) |
+| `/register` | ثبت‌نام ناوگان: نام، نوع خودرو، پلاک با رابط شبیه پلاک ایران، کد ملی و تصویر کارت ملی/شناسنامه |
+| `/home` | داشبورد ناوگان: کیف پول، آخرین بارها، آمادگی، آخرین سرویس‌ها، خرید لوازم یدکی و بقیه خدمات |
 
-## Learn More
+## ساختار
 
-To learn more about Next.js, take a look at the following resources:
+- `src/components/AuthScreens.tsx` — ورود و ثبت‌نام (پلاک، کد ملی، بارگذاری مدرک)
+- `src/components/Dashboard.tsx` — پوستهٔ اپ، منوی کشویی، نوار پایین، کیف پول
+- `src/components/driver/HomeView.tsx` — داشبورد (آخرین بارها، آمادگی، سرویس‌ها، اسلایدر)
+- `src/components/driver/IranShahrView.tsx` — تالار ایرانشهر: فید بارهای آزاد + چت
+- `src/components/driver/OpsViews.tsx` — بارهای من، آمادگی و شیفت، جزئیات بار، آخرین سرویس‌ها
+- `src/components/driver/StoreViews.tsx` — خرید لوازم یدکی (گیربکس، موتور، بدنه، برق) و خدمات فنی/بیمه
+- `src/components/driver/AccountViews.tsx` — پروفایل، خودرو و پلاک، مدارک، آموزش، دعوت، پشتیبانی، اعلان‌ها
+- `src/app/driver.css` — استایل اختصاصی ناوگان
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## منوی ناوبری
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+نوار پایین: **خانه · کیف پول · تالار ایرانشهر · پروفایل** و منوی کشویی شامل
+دسترسی سریع، کار و بار، خدمات ناوگان و حساب من.
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> داده‌ها فعلاً در `localStorage` نگه‌داری می‌شوند (نسخهٔ نمونهٔ رابط کاربری).

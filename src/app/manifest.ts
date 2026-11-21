@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "خودرو چاره | ناوگان امداد و سفیران",
     short_name: "خودرو چاره ناوگان",
-    description: "دریافت بار، تالار ایرانشهر و خدمات ویژهٔ امدادگران و سفیران خودرو چاره.",
+    description: "دریافت بار، اعلام بار و خدمات ویژهٔ امدادگران و سفیران خودرو چاره.",
     start_url: "/",
     scope: "/",
     display: "standalone",

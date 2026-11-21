@@ -24,13 +24,13 @@ export function useLiveRequest(id: string, initialRequest?: AssistanceRequest) {
       const readTracking = () => api<Tracking>(`/requests/${encodeURIComponent(id)}/tracking`, { signal: trackingSignal }).catch(() => null);
       // The existing screen already has an authenticated request snapshot.
       // Read in parallel, but publish GPS only after fresh request authorization.
-      const pendingTracking = confirmed && !["COMPLETED", "CANCELLED"].includes(confirmed.status) ? readTracking() : null;
+      const pendingTracking = confirmed && !["COMPLETED", "CANCELLED", "EXPIRED"].includes(confirmed.status) ? readTracking() : null;
       try {
         const current = await api<AssistanceRequest>(`/requests/${encodeURIComponent(id)}`, { signal: controller.signal });
         if (controller.signal.aborted) return;
         confirmed = current;
         setRequest(current);
-        if (current.status === "COMPLETED" || current.status === "CANCELLED") { setTracking({ driver: null }); return; }
+        if (current.status === "COMPLETED" || current.status === "CANCELLED" || current.status === "EXPIRED") { setTracking({ driver: null }); return; }
         const next = await (pendingTracking || readTracking());
         if (next && !controller.signal.aborted) setTracking(next);
       } catch { /* Keep the last confirmed status; stale GPS is hidden below. */ }

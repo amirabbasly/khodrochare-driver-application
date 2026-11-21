@@ -74,7 +74,7 @@ export function LoadsView({
         <div className="panel-card loads-empty">
           <span><Icon name="briefcase" size={26} /></span>
           <strong>باری در این بخش نیست</strong>
-          <p>بارهای آزاد جدید در تالار ایرانشهر منتشر می‌شوند.</p>
+          <p>بارهای آزاد جدید در اعلام بار منتشر می‌شوند.</p>
         </div>
       ) : (
         <div className="loads-list">

@@ -3,6 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api, ApiError, currentPosition, errorMessage, openSocket, type AssistanceRequest, type Tracking } from "./api";
 import type { LoadOffer } from "@/components/driver/shared";
 
+const PENDING_LIFETIME_MS = 6 * 60 * 60 * 1000;
+
 export type PendingLoadAction={id:string;phase:"accept"|"location"};
 
 type AvailableRequest = Pick<AssistanceRequest, "id" | "service" | "vehicleName" | "originLat" | "originLng" | "destinationLat" | "destinationLng" | "distanceMeters" | "priceToman" | "createdAt">;
@@ -12,6 +14,7 @@ export function toLoad(request: AvailableRequest & Partial<AssistanceRequest>): 
   return {
     driverCommissionConfirmedAt: request.driverCommissionConfirmedAt,
     operationsStartedAt: request.operationsStartedAt, paymentStatus: request.payment?.status,
+    expiresAt: request.status === "PENDING" && Number.isFinite(createdAt.getTime()) ? new Date(createdAt.getTime() + PENDING_LIFETIME_MS).toISOString() : undefined,
     id: request.id, customer: "مشتری خودرو چاره", role: "درخواست امداد", rating: 0, tone: 0,
     car: request.vehicleName, plate: request.vehiclePlate || "—",
     from: request.originAddress || "نشانی مبدأ ثبت نشده",
@@ -56,9 +59,9 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
         ready ? api<AvailableRequest[]>("/drivers/requests/available", { signal }) : Promise.resolve([]),
       ]);
       if (signal?.aborted || busy.current || revision.current!==startedRevision) return;
-      const own = assigned.filter(r => r.status !== "CANCELLED");
+      const own = assigned.filter(r => !["CANCELLED", "EXPIRED"].includes(r.status));
       // The available endpoint deliberately omits private fields and status.
-      const offers = pending.map(request => ({ ...request, status: "PENDING" as const, driverId: null }));
+      const offers = pending.filter(r => Date.parse(r.createdAt) + PENDING_LIFETIME_MS > Date.now()).map(request => ({ ...request, status: "PENDING" as const, driverId: null }));
       const merged = new Map([...offers, ...own].map(r => [r.id, toLoad(r)]));
       setLoads([...merged.values()]);
       const active = own.find(r => ["ACCEPTED", "ARRIVED"].includes(r.status));
@@ -83,6 +86,12 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
     }, 5000);
     return () => { controller.abort();invalidateRefresh(); window.clearInterval(timer); socket.disconnect(); };
   }, [refresh,invalidateRefresh]);
+  const nextExpiry = loads.reduce((soonest, load) => load.status === "pending" && load.expiresAt ? Math.min(soonest, Date.parse(load.expiresAt)) : soonest, Infinity);
+  useEffect(() => {
+    if (!Number.isFinite(nextExpiry)) return;
+    const timer = window.setTimeout(() => setLoads(items => items.filter(load => load.status !== "pending" || !load.expiresAt || Date.parse(load.expiresAt) > Date.now())), Math.max(0, nextExpiry - Date.now()));
+    return () => window.clearTimeout(timer);
+  }, [nextExpiry]);
   const active = loads.find(l => l.status === "active") || null;
   const activeId = active?.id;
   useEffect(() => {
@@ -106,6 +115,11 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
   }, [ready, activeId, syncLocation]);
   const accept = async (load: LoadOffer) => {
     if (busy.current || load.status!=="pending") return false;
+    if (load.expiresAt && Date.parse(load.expiresAt) <= Date.now()) {
+      setLoads(items => items.filter(item => item.id !== load.id));
+      notifyRef.current("مهلت پذیرش این درخواست تمام شده است.");
+      return false;
+    }
     busy.current = true;revision.current++;setPendingAction({id:load.id,phase:'accept'});
     try {
       let request:AssistanceRequest;

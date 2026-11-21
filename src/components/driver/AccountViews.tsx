@@ -221,10 +221,12 @@ export function DocumentsView({
   session,
   onBack,
   onToast,
+  onPendingFeature,
 }: {
   session: DriverSession;
   onBack: () => void;
   onToast: (message: string) => void;
+  onPendingFeature: () => void;
 }) {
   const [saved, setUploaded] = useState<Record<string, boolean>>({});
   const uploaded: Record<string, boolean> = { ...saved, national: saved.national || !!session.documentName };
@@ -233,7 +235,7 @@ export function DocumentsView({
   const percent = Math.round((completed / DOCUMENTS.length) * 100);
 
   async function uploadIdentity(file: File, id: string) {
-    if (id !== "national") { onToast("ثبت این نوع مدرک هنوز در سرور فعال نشده است."); return; }
+    if (id !== "national") { onPendingFeature(); return; }
     if (busy) return;
     setBusy(true);
     try {
@@ -247,7 +249,8 @@ export function DocumentsView({
   }
   async function downloadIdentity(id: string) {
     const documentId = getSession()?.user.identityDocumentId;
-    if (id !== "national" || !documentId) { onToast("مدرکی برای نمایش در سرور ثبت نشده است."); return; }
+    if (id !== "national") { onPendingFeature(); return; }
+    if (!documentId) { onToast("مدرکی برای نمایش در سرور ثبت نشده است."); return; }
     try {
       const file = await api<Blob>(`/documents/${documentId}`, { responseType: "blob" });
       const url = URL.createObjectURL(file);
@@ -286,6 +289,7 @@ export function DocumentsView({
                 <label className="document-upload">
                   <input
                     type="file"
+                    onClick={event => { if (document.id !== "national") { event.preventDefault(); onPendingFeature(); } }}
                     accept="image/png,image/jpeg" disabled={busy}
                     onChange={(event) => {
                       const file = event.target.files?.[0];
@@ -412,7 +416,7 @@ export function SupportView({ onBack, onToast }: { onBack: () => void; onToast: 
       <div className="support-columns">
         <section className="panel-card faq-panel">
           <SectionTitle title="سؤال‌های پرتکرار" caption="شاید پاسخ سؤالت اینجا باشد." />
-          <details><summary>چطور بار آزاد بگیرم؟ <span>+</span></summary><p>آمادگی را فعال کن و در تالار ایرانشهر بارهای آزاد همکاران را ببین؛ با تأیید بار، مأموریت در «بارهای من» ثبت می‌شود.</p></details>
+          <details><summary>چطور بار آزاد بگیرم؟ <span>+</span></summary><p>آمادگی را فعال کن و در اعلام بار بارهای آزاد همکاران را ببین؛ با تأیید بار، مأموریت در «بارهای من» ثبت می‌شود.</p></details>
           <details><summary>چرا باری به من نشان داده نمی‌شود؟ <span>+</span></summary><p>اگر آمادگی غیرفعال باشد، اپلیکیشن باری نشان نمی‌دهد. محدودهٔ خدمت و ساعت شیفت را هم بررسی کن.</p></details>
           <details><summary>تسویهٔ بار چطور انجام می‌شود؟ <span>+</span></summary><p>پس از تحویل بار، مبلغ به کیف پول ناوگان اضافه می‌شود و در روزهای تسویه قابل برداشت است.</p></details>
           <details><summary>مدارک لازم برای تأیید ناوگان چیست؟ <span>+</span></summary><p>کارت ملی یا شناسنامه، گواهینامهٔ متناسب با نوع خودرو، بیمه‌نامه و معاینهٔ فنی.</p></details>

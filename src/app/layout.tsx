@@ -8,7 +8,7 @@ import "./driver.css";
 
 export const metadata: Metadata = {
   title: "خودرو چاره | ناوگان امداد و سفیران",
-  description: "دریافت بار، تالار ایرانشهر، قطعات یدکی و خدمات ویژهٔ ناوگان امداد و سفیران خودرو چاره.",
+  description: "دریافت بار، اعلام بار، قطعات یدکی و خدمات ویژهٔ ناوگان امداد و سفیران خودرو چاره.",
   applicationName: "خودرو چاره · ناوگان",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

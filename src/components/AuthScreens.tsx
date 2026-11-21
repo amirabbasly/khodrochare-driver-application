@@ -63,7 +63,7 @@ function AuthVisual({ variant = "login" }: { variant?: "login" | "register" }) {
           <h2>مسیرهای سخت را<br />با هم آسان می‌کنیم.</h2>
           <p>با ثبت خودرو و مدارک، بارهای آزاد ناوگان، تسویهٔ آنی و خدمات ویژهٔ همکاران برایت فعال می‌شود.</p>
           <ul className="auth-driver-points">
-            <li><Icon name="check" size={14} /> مشاهدهٔ بارهای آزاد ایرانشهر</li>
+            <li><Icon name="check" size={14} /> مشاهدهٔ بارهای اعلام‌شده</li>
             <li><Icon name="check" size={14} /> آمادگی و شیفت دلخواه</li>
             <li><Icon name="check" size={14} /> خرید قطعات با قیمت همکار</li>
           </ul>

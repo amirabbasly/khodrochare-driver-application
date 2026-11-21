@@ -58,13 +58,14 @@ export type PartCategory = {
 };
 
 export type LoadOffer = {
+  expiresAt?: string;
   driverCommissionConfirmedAt?: string | null;
   operationsStartedAt?: string | null;
   paymentStatus?: string;
   service?: string;
   partsQuoteToman?: number | null;
   partsApprovedToman?: number | null;
-  serverStatus?: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED";
+  serverStatus?: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED" | "EXPIRED";
   priceKnown?: boolean;
   id: string;
   customer: string;
@@ -520,7 +521,7 @@ export const heroSlides = [
     image: "/slides/driver/hero-loads.jpg",
     tag: "بارهای آزاد امروز",
     title: "بار بگیر، مسیر بساز.",
-    description: "بارهای آزاد ناوگان و سفیران را در تالار ایرانشهر ببین و همان‌جا تأیید کن.",
+    description: "بارهای آزاد ناوگان و سفیران را در اعلام بار ببین و همان‌جا تأیید کن.",
     action: "دیدن بارها",
     target: "shahr" as View,
   },
@@ -548,7 +549,7 @@ export const bannerSlides = [
   {
     id: "banner-social",
     image: "/slides/driver/banner-social.jpg",
-    tag: "تالار ایرانشهر",
+    tag: "اعلام بار",
     title: "بار آزادت را با بقیه به اشتراک بگذار",
     description: "شبکهٔ اجتماعی امدادگران؛ بار بگیر، چت کن و مسیر بساز.",
     target: "shahr" as View,

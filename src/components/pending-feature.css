@@ -1,0 +1,9 @@
+.pending-feature-dialog{width:min(420px,calc(100% - 32px));max-height:calc(100dvh - 48px);margin:auto;border:1px solid #e0e8ed;border-radius:24px;padding:36px 24px 24px;background:#fff;color:#132f40;text-align:center;box-shadow:0 24px 90px #112a3833;overflow:auto;direction:rtl}
+.pending-feature-dialog::backdrop{background:#112a3866;backdrop-filter:blur(4px)}
+.pending-feature-dialog .pending-feature-close{position:absolute;top:10px;left:10px;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;background:transparent;color:#627786;cursor:pointer}
+.pending-feature-icon{display:grid;place-items:center;width:66px;height:66px;margin:8px auto 20px;border-radius:20px;background:#fff0e4;color:#ed6a20}
+.pending-feature-dialog h2{margin:0 0 12px;font-size:22px;line-height:1.6}
+.pending-feature-dialog p{margin:0 0 24px;font-size:16px;line-height:2;color:#536c7c}
+.pending-feature-dialog .pending-feature-confirm{width:100%;min-height:48px;border:0;border-radius:12px;background:#ed6a20;color:white;font:inherit;font-weight:700;cursor:pointer}
+.pending-feature-dialog button:focus-visible{outline:3px solid #112a38;outline-offset:3px}
+.pending-feature-dialog .pending-feature-close:hover{background:#f2f5f7}

@@ -217,7 +217,7 @@ function LoadHero({
         <span className="lh-refresh"><Icon name="refresh" size={12} /> هر ۱۵ ثانیه به‌روز می‌شود</span>
         <span className="lh-active-count"><Icon name="briefcase" size={12} /> {activeCount.toLocaleString("fa-IR")} در حال انجام</span>
         <button className="lh-link" type="button" onClick={() => onNavigate("shahr")}>
-          تالار ایرانشهر <Icon name="arrow-left" size={14} />
+          اعلام بار <Icon name="arrow-left" size={14} />
         </button>
       </div>
 
@@ -316,11 +316,11 @@ export function HomeView({
   activeCount,
   pendingAction,
   onNavigate,
-  onToast,
   onAcceptLoad,
   onRejectLoad,
   onOpenPart,
   onOpenService,
+  onPendingFeature,
 }: {
   balance: number;
   ready: boolean;
@@ -328,11 +328,11 @@ export function HomeView({
   activeCount: number;
   pendingAction?: PendingLoadAction|null;
   onNavigate: (view: View) => void;
-  onToast: (message: string) => void;
   onAcceptLoad: (load: LoadOffer) => void;
   onRejectLoad: (load: LoadOffer) => void;
   onOpenPart: (key: PartKey) => void;
   onOpenService: (service: DriverService) => void;
+  onPendingFeature: () => void;
 }) {
   return (
     <div className="home-content">
@@ -388,7 +388,7 @@ export function HomeView({
           {moreServices.map((service, index) => (
             <ServiceCard key={service.id} service={service} onClick={() => onOpenService(service)} delay={index * 0.18} />
           ))}
-          <button className="service-card service-card--more" type="button" onClick={() => onToast("به‌زودی خدمات بیشتری برای ناوگان اضافه می‌شود")}>
+          <button className="service-card service-card--more" type="button" onClick={onPendingFeature}>
             <MoreDots3D delay={0.4} />
             <span className="service-name">بیشتر</span>
             <span className="service-note">به‌زودی بیشتر</span>

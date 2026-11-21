@@ -147,7 +147,7 @@ export function TechView({
           <h2>کارشناس فنی ناوگان</h2>
           <p>هر ساعت از شبانه‌روز، برای عیب‌یابی و هماهنگی کنارت هستیم.</p>
           <a href="tel:02191001200" dir="ltr">۰۲۱ - ۹۱۰۰ - ۱۲۰۰</a>
-          <button type="button" onClick={() => onToast("گفت‌وگو با کارشناس در تالار ایرانشهر باز شد")}>گفت‌وگو با کارشناس <Icon name="chat" size={15} /></button>
+          <button type="button" onClick={() => onToast("گفت‌وگو با کارشناس در اعلام بار باز شد")}>گفت‌وگو با کارشناس <Icon name="chat" size={15} /></button>
           <div className="tech-contact-note"><Icon name="clock" size={13} /> میانگین پاسخ‌گویی: ۳ دقیقه</div>
         </aside>
       </div>

@@ -114,7 +114,7 @@ export function IranShahrView({
     setTo("");
     setCar("");
     setPrice("");
-    onToast("بار آزادت در تالار ایرانشهر منتشر شد.");
+    onToast("بار آزادت در اعلام بار منتشر شد.");
   }
 
   function completePost(post: DriverPost) {
@@ -125,7 +125,7 @@ export function IranShahrView({
   return (
     <div className="subpage">
       <PageTitle
-        title="تالار ایرانشهر"
+        title="اعلام بار"
         subtitle="بار آزادت را منتشر کن و بارهای ناوگان را ببین"
         onBack={onBack}
         action={<span className="shahr-live"><i /> {posts.length.toLocaleString("fa-IR")} بار در تالار</span>}

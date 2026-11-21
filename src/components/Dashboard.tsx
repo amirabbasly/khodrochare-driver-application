@@ -1,4 +1,5 @@
 "use client";
+import {PendingFeatureDialog} from "./PendingFeature";
 import {AssistantChat} from "./AssistantChat";
 import {WalletPanel} from "./WalletPanel";
 import {useWallet} from "@/lib/use-wallet";
@@ -25,12 +26,13 @@ import {
   type View,
 } from "@/components/driver/shared";
 
+const unfinishedViews = new Set<View>(["shahr", "parts", "tech", "training", "maintenance", "invite", "support", "notifications"]);
 const READY_KEY = "khodrochare_readiness_v2";
 
 const bottomItems: { label: string; view: View; icon: IconName }[] = [
   { label: "خانه", view: "home", icon: "home" },
   { label: "کیف پول", view: "wallet", icon: "wallet" },
-  { label: "تالار ایرانشهر", view: "shahr", icon: "chat" },
+  { label: "اعلام بار", view: "shahr", icon: "chat" },
   { label: "پروفایل", view: "profile", icon: "user" },
 ];
 
@@ -40,7 +42,7 @@ const drawerGroups: { label: string; items: { label: string; view: View; icon: I
     items: [
       { label: "خانه", view: "home", icon: "home" },
       { label: "کیف پول", view: "wallet", icon: "wallet" },
-      { label: "تالار ایرانشهر", view: "shahr", icon: "chat" },
+      { label: "اعلام بار", view: "shahr", icon: "chat" },
       { label: "پروفایل من", view: "profile", icon: "user" },
     ],
   },
@@ -106,6 +108,7 @@ export default function Dashboard() {
   
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [pendingFeatureOpen, setPendingFeatureOpen] = useState(false);
   const [toast, setToast] = useState("");
   const user = useAuthenticatedUser();
   const serviceIds = { REPAIR: "repair", TOWING: "transport", MOBILE_CARWASH: "carwash", PERIODIC_SERVICE: "maintenance", INSPECTION: "inspection" };
@@ -134,7 +137,10 @@ export default function Dashboard() {
     window.setTimeout(() => setToast(""), 3400);
   }
 
+  function showPendingFeature() { setDrawerOpen(false); setPendingFeatureOpen(true); }
+
   function navigate(next: View) {
+    if (unfinishedViews.has(next)) { showPendingFeature(); return; }
 
     setView(next);
     setDrawerOpen(false);
@@ -179,9 +185,9 @@ export default function Dashboard() {
     await feed.status(load, "COMPLETED");
     setSelectedLoadId(null); navigate("loads"); notify("پایان مأموریت در سرور ثبت شد.");
   }
-  function takePost() { notify("ثبت بار از تالار ایرانشهر هنوز در سرور فعال نشده است."); }
+  function takePost() { notify("ثبت بار از اعلام بار هنوز در سرور فعال نشده است."); }
   async function saveProfile(fullName: string) { try { const updated = await api<User>('/me', { method: 'PATCH', body: { fullName } }); updateSessionUser(updated); window.dispatchEvent(new CustomEvent('khodrochare:user', { detail: updated })); notify('نام شما ذخیره شد.'); } catch (error) { notify(errorMessage(error)); } }
-  function saveVehicle() { notify("ویرایش خودروی امدادگر هنوز در سرور فعال نشده است."); }
+  function saveVehicle() { showPendingFeature(); }
   async function logout() {
     try { await backendLogout(); } catch (error) { notify(errorMessage(error)); }
     finally { router.replace("/"); }
@@ -202,18 +208,18 @@ export default function Dashboard() {
           pendingLoads={pendingLoads}
           activeCount={activeCount}
           onNavigate={navigate}
-          onToast={notify}
           onAcceptLoad={acceptLoad}
           onRejectLoad={rejectLoad}
           onOpenPart={openPart}
           onOpenService={openService}
+          onPendingFeature={showPendingFeature}
         />
       );
       break;
     case "wallet": content = <WalletPanel onBack={() => navigate("home")} />; break;
     case "shahr": content = <IranShahrView userName={userName} onBack={() => navigate("home")} onToast={notify} onTakeLoad={takePost} />; break;
     case "profile":
-      content = <ProfileView session={session} onSave={saveProfile} onBack={() => navigate("home")} onToast={notify} onNavigate={navigate} />;
+      content = <ProfileView session={session} onSave={saveProfile} onBack={() => navigate("home")} onToast={showPendingFeature} onNavigate={navigate} />;
       break;
     case "loads":
       content = (
@@ -221,7 +227,7 @@ export default function Dashboard() {
           pendingAction={feed.pendingAction}
           loads={loads}
           onBack={() => navigate("home")}
-          onToast={notify}
+          onToast={showPendingFeature}
           onAccept={acceptLoad}
           onReject={rejectLoad}
           onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }}
@@ -229,11 +235,11 @@ export default function Dashboard() {
         />
       );
       break;
-    case "readiness": content = <ReadinessView ready={ready} onToggle={toggleReady} onBack={() => navigate("home")} onToast={notify} />; break;
+    case "readiness": content = <ReadinessView ready={ready} onToggle={toggleReady} onBack={() => navigate("home")} onToast={showPendingFeature} />; break;
     case "job":
       content = activeLoad
         ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onPartsQuote={async () => { await feed.refresh(); }} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
-        : <LoadsView pendingAction={feed.pendingAction} loads={loads} onBack={() => navigate("home")} onToast={notify} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
+        : <LoadsView pendingAction={feed.pendingAction} loads={loads} onBack={() => navigate("home")} onToast={showPendingFeature} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
       break;
     case "parts":
       content = <PartsView key={partFilter} initialPart={partFilter} onBack={() => navigate("home")} onToast={notify} />;
@@ -241,8 +247,8 @@ export default function Dashboard() {
     case "tech":
       content = <TechView key={techServiceId} initialId={techServiceId} onBack={() => navigate("home")} onToast={notify} />;
       break;
-    case "vehicles": content = <VehicleView session={session} onSave={saveVehicle} onBack={() => navigate("profile")} onToast={notify} />; break;
-    case "documents": content = <DocumentsView session={session} onBack={() => navigate("profile")} onToast={notify} />; break;
+    case "vehicles": content = <VehicleView session={session} onSave={saveVehicle} onBack={() => navigate("profile")} onToast={showPendingFeature} />; break;
+    case "documents": content = <DocumentsView session={session} onBack={() => navigate("profile")} onToast={notify} onPendingFeature={showPendingFeature} />; break;
     case "training": content = <TrainingView onBack={() => navigate("home")} onToast={notify} />; break;
     case "maintenance": content = <MaintenanceView onBack={() => navigate("home")} onToast={notify} />; break;
     case "invite": content = <InviteView onBack={() => navigate("home")} onToast={notify} />; break;
@@ -257,11 +263,11 @@ export default function Dashboard() {
           pendingLoads={pendingLoads}
           activeCount={activeCount}
           onNavigate={navigate}
-          onToast={notify}
           onAcceptLoad={acceptLoad}
           onRejectLoad={rejectLoad}
           onOpenPart={openPart}
           onOpenService={openService}
+          onPendingFeature={showPendingFeature}
         />
       );
   }
@@ -346,6 +352,7 @@ export default function Dashboard() {
       </aside>
 
       <AssistantChat open={chatOpen} setOpen={setChatOpen} title="چاره‌یار ناوگان" subtitle="راهنمای هوشمند امدادگران" />
+      {pendingFeatureOpen && <PendingFeatureDialog onClose={() => setPendingFeatureOpen(false)} />}
       {customerSheet && <CustomerSheet load={customerSheet} onClose={() => setCustomerSheet(null)} onToast={notify} />}
       {toast && <div className="toast-message" role="status"><span><Icon name="check" size={17} /></span>{toast}<button type="button" onClick={() => setToast("")} aria-label="بستن پیام"><Icon name="close" size={15} /></button></div>}
     </div>

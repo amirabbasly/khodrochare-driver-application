@@ -50,6 +50,15 @@ export function SessionProvider({children}: {children: ReactNode}) {
     return () => controller.abort();
   }, [attempt,authenticate]);
 
+  useEffect(() => {
+    if(state.status!=='authenticated')return;
+    const controller=new AbortController();
+    const refresh=()=>{if(document.visibilityState==='visible')void api<User>('/me',{signal:controller.signal}).then(user=>{if(!controller.signal.aborted)authenticate(user);}).catch(()=>{});};
+    const timer=window.setInterval(refresh,15000);
+    window.addEventListener('focus',refresh);
+    return()=>{controller.abort();window.clearInterval(timer);window.removeEventListener('focus',refresh);};
+  },[state.status,authenticate]);
+
   return <SessionContext.Provider value={{...state,retry,authenticate}}>{children}</SessionContext.Provider>;
 }
 

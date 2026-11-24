@@ -1,5 +1,6 @@
 "use client";
 
+import {useAuthenticatedUser} from "@/lib/use-backend";
 import Link from "next/link";
 import {ProfilePhoneChange} from "../ProfilePhoneChange";
 import { IranPlate } from "../IranPlate";
@@ -229,6 +230,8 @@ export function DocumentsView({
   onToast: (message: string) => void;
   onPendingFeature: () => void;
 }) {
+  const user=useAuthenticatedUser();
+  const verificationLabel=user?.verificationStatus==="APPROVED"?"احراز هویت تأیید شده است":user?.verificationStatus==="NEEDS_CORRECTION"?"نیازمند اصلاح؛ اپراتور با شما تماس می‌گیرد":"احراز هویت در صف بررسی قرار دارد";
   const [saved, setUploaded] = useState<Record<string, boolean>>({});
   const uploaded: Record<string, boolean> = { ...saved, national: saved.national || !!session.documentName };
   const [busy, setBusy] = useState(false);
@@ -242,7 +245,7 @@ export function DocumentsView({
     try {
       const reference = await uploadDocument(file);
       await api("/me/identity-document", { method: "POST", body: reference });
-      updateSessionUser(await api<User>("/me"));
+      const updated=await api<User>("/me");updateSessionUser(updated);window.dispatchEvent(new CustomEvent("khodrochare:user",{detail:updated}));
       setUploaded(current => ({ ...current, national: true }));
       onToast("مدرک هویتی در سرور ثبت شد.");
     } catch (error) { onToast(errorMessage(error)); }
@@ -261,7 +264,7 @@ export function DocumentsView({
   }
   return (
     <div className="subpage">
-      <PageTitle title="مدارک و احراز هویت" subtitle="تکمیل مدارک، دریافت بارهای ویژه را فعال می‌کند" onBack={onBack} />
+      <PageTitle title="مدارک و احراز هویت" subtitle="پذیرش بار و استفاده از ماژول‌ها پس از تأیید اپراتور فعال می‌شود" onBack={onBack} />
 
       <section className="doc-progress-card">
         <div className="doc-progress-head">
@@ -270,7 +273,7 @@ export function DocumentsView({
           <b>{percent.toLocaleString("fa-IR")}٪</b>
         </div>
         <div className="doc-progress-bar"><span style={{ width: `${percent}%` }} /></div>
-        <p>{percent === 100 ? "همهٔ مدارک ثبت شده‌اند؛ حساب ناوگان تو کامل است." : "برای فعال‌شدن همهٔ بارها، مدارک باقی‌مانده را بارگذاری کن."}</p>
+        <p>{verificationLabel}</p>
       </section>
 
       <section className="panel-card document-list">

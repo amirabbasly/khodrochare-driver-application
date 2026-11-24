@@ -1,4 +1,5 @@
 "use client";
+import {VerificationNotices,PendingVerificationDialog} from "./DriverVerification";
 import {DiagnosticOffer} from "./DiagnosticOffer";
 import {MarketStore} from "./MarketStore";
 import {PendingFeatureDialog} from "./PendingFeature";
@@ -111,6 +112,7 @@ export default function Dashboard() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [pendingFeatureOpen, setPendingFeatureOpen] = useState(false);
+  const [verificationOpen,setVerificationOpen]=useState(false);
   const [toast, setToast] = useState("");
   const user = useAuthenticatedUser();
   const serviceIds = { REPAIR: "repair", TOWING: "transport", MOBILE_CARWASH: "carwash", PERIODIC_SERVICE: "maintenance", INSPECTION: "inspection" };
@@ -118,7 +120,7 @@ export default function Dashboard() {
   const [ready, setReady] = useState(false);
   const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
   const [rejectedIds, setRejectedIds] = useState<string[]>([]);
-  const feed = useDriverFeed(ready, notify);
+  const feed = useDriverFeed(ready || user?.verificationStatus!=="APPROVED", notify);
   const wallet = useWallet();
   const balance = wallet.data?.balanceToman || 0;
   const loads = feed.loads.filter(load => load.status !== "pending" || !rejectedIds.includes(load.id));
@@ -134,14 +136,21 @@ export default function Dashboard() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  useEffect(()=>{
+    const required=()=>setVerificationOpen(true);
+    window.addEventListener('khodrochare:verification-required',required);
+    return()=>window.removeEventListener('khodrochare:verification-required',required);
+  },[]);
+
   function notify(message: string) {
     setToast(message);
     window.setTimeout(() => setToast(""), 3400);
   }
 
-  function showPendingFeature() { setDrawerOpen(false); setPendingFeatureOpen(true); }
+  function showPendingFeature() { setDrawerOpen(false); if(user?.verificationStatus!=="APPROVED"){setVerificationOpen(true);return;} setPendingFeatureOpen(true); }
 
   function navigate(next: View) {
+    if (!["home","loads","profile","documents","vehicles","support","readiness","job","diagnostic","wallet"].includes(next)&&user?.verificationStatus!=="APPROVED"){setDrawerOpen(false);setVerificationOpen(true);return;}
     if (unfinishedViews.has(next)) { showPendingFeature(); return; }
 
     setView(next);
@@ -177,6 +186,8 @@ export default function Dashboard() {
   }
 
   async function acceptLoad(load: LoadOffer) {
+    if(user?.verificationStatus!=="APPROVED"){setVerificationOpen(true);return;}
+    if(balance<0){notify("تا زمان تسویه بدهی کیف پول، اجازه گرفتن بار جدید ندارید.");return;}
     if (await feed.accept(load)) { setSelectedLoadId(load.id); navigate("job"); notify("درخواست با موفقیت پذیرفته شد."); }
   }
   function rejectLoad(load: LoadOffer) {
@@ -205,6 +216,7 @@ export default function Dashboard() {
     case "home":
       content = (
         <HomeView
+          verificationPending={user?.verificationStatus!=="APPROVED"}
           pendingAction={feed.pendingAction}
           balance={balance}
           ready={ready}
@@ -262,6 +274,7 @@ export default function Dashboard() {
     default:
       content = (
         <HomeView
+          verificationPending={user?.verificationStatus!=="APPROVED"}
           pendingAction={feed.pendingAction}
           balance={balance}
           ready={ready}
@@ -358,6 +371,8 @@ export default function Dashboard() {
       </aside>
 
       <AssistantChat open={chatOpen} setOpen={setChatOpen} title="چاره‌یار ناوگان" subtitle="راهنمای هوشمند امدادگران" />
+      <VerificationNotices user={user}/>
+      {verificationOpen&&<PendingVerificationDialog onClose={()=>setVerificationOpen(false)}/>}
       {pendingFeatureOpen && <PendingFeatureDialog onClose={() => setPendingFeatureOpen(false)} />}
       {customerSheet && <CustomerSheet load={customerSheet} onClose={() => setCustomerSheet(null)} onToast={notify} />}
       {toast && <div className="toast-message" role="status"><span><Icon name="check" size={17} /></span>{toast}<button type="button" onClick={() => setToast("")} aria-label="بستن پیام"><Icon name="close" size={15} /></button></div>}

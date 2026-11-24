@@ -175,6 +175,7 @@ const ROTATE_SECONDS = 15;
 
 function LoadHero({
   ready,
+  preview = false,
   loads,
   activeCount,
   pendingAction,
@@ -183,6 +184,7 @@ function LoadHero({
   onReject,
 }: {
   ready: boolean;
+  preview?:boolean;
   loads: LoadOffer[];
   activeCount: number;
   pendingAction?: PendingLoadAction|null;
@@ -194,10 +196,10 @@ function LoadHero({
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!ready || total === 0 || pendingAction) return;
+    if (!(ready||preview) || total === 0 || pendingAction) return;
     const timer = window.setInterval(() => setTick((value) => value + 1), 1000);
     return () => window.clearInterval(timer);
-  }, [ready, total, pendingAction]);
+  }, [ready,preview, total, pendingAction]);
 
   const index = total > 0 ? Math.floor(tick / ROTATE_SECONDS) % total : 0;
   const seconds = ROTATE_SECONDS - (tick % ROTATE_SECONDS);
@@ -206,12 +208,12 @@ function LoadHero({
   const isCarry = current ? current.weight.startsWith("حمل") : false;
 
   return (
-    <section className={`load-hero${ready ? " is-ready" : ""}`} aria-label="آخرین بار آزاد و درخواست امداد">
+    <section className={`load-hero${(ready||preview) ? " is-ready" : ""}`} aria-label="آخرین بار آزاد و درخواست امداد">
       <div className="lh-panel-head lh-panel-head--load">
         <span className="lh-panel-index">۱</span>
         <strong>آخرین بار</strong>
         <small className="lh-panel-hint">درخواست امدادخواه روی نقشه</small>
-        <span className="lh-live"><i /> {ready ? "آمادهٔ دریافت بار" : "آمادگی خاموش"}</span>
+        <span className="lh-live"><i /> {preview?"مشاهده بارها؛ در انتظار احراز":ready ? "آمادهٔ دریافت بار" : "آمادگی خاموش"}</span>
         <span className="lh-counter">
           {total > 0 ? `بار ${(index + 1).toLocaleString("fa-IR")} از ${total.toLocaleString("fa-IR")}` : "بدون بار آزاد"}
         </span>
@@ -222,7 +224,7 @@ function LoadHero({
         </button>
       </div>
 
-      {!ready ? (
+      {!(ready||preview) ? (
         <div className="lh-top-empty">
           <span className="lh-empty-icon"><Icon name="power" size={22} /></span>
           <div>
@@ -290,7 +292,7 @@ function LoadHero({
             <button
               className="lh-accept"
               type="button"
-              disabled={!ready || Boolean(pendingAction)}
+              disabled={!(ready||preview) || Boolean(pendingAction)}
               onClick={() => onAccept(current)}
             >
               <Icon name="check" size={17} /> {pendingAction?.id===current.id?(pendingAction.phase==='location'?'دریافت موقعیت…':'در حال پذیرش…'):'تأیید و گرفتن بار'}
@@ -298,7 +300,7 @@ function LoadHero({
             <button
               className="lh-cancel"
               type="button"
-              disabled={!ready || Boolean(pendingAction)}
+              disabled={!(ready||preview) || Boolean(pendingAction)}
               onClick={() => onReject(current)}
             >
               <Icon name="close" size={16} /> اعلام کنسلی
@@ -313,6 +315,7 @@ function LoadHero({
 export function HomeView({
   balance,
   ready,
+  verificationPending = false,
   pendingLoads,
   activeCount,
   pendingAction,
@@ -325,6 +328,7 @@ export function HomeView({
 }: {
   balance: number;
   ready: boolean;
+  verificationPending?:boolean;
   pendingLoads: LoadOffer[];
   activeCount: number;
   pendingAction?: PendingLoadAction|null;
@@ -350,6 +354,7 @@ export function HomeView({
       </section>
 
       <LoadHero
+        preview={verificationPending}
         ready={ready}
         loads={pendingLoads}
         activeCount={activeCount}

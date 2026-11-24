@@ -131,7 +131,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      try { setReady(localStorage.getItem(READY_KEY) === "1"); } catch {}
+      try { setReady(localStorage.getItem(READY_KEY) === "1");if(new URLSearchParams(window.location.search).get("view")==="documents")setView("documents"); } catch {}
     }, 0);
     return () => window.clearTimeout(timer);
   }, []);
@@ -265,7 +265,7 @@ export default function Dashboard() {
       content = <TechView key={techServiceId} initialId={techServiceId} onBack={() => navigate("home")} onToast={notify} />;
       break;
     case "vehicles": content = <VehicleView session={session} onSave={saveVehicle} onBack={() => navigate("profile")} onToast={showPendingFeature} />; break;
-    case "documents": content = <DocumentsView session={session} onBack={() => navigate("profile")} onToast={notify} onPendingFeature={showPendingFeature} />; break;
+    case "documents": content = <DocumentsView onBack={() => navigate("profile")} onToast={notify} />; break;
     case "training": content = <TrainingView onBack={() => navigate("home")} onToast={notify} />; break;
     case "maintenance": content = <MaintenanceView onBack={() => navigate("home")} onToast={notify} />; break;
     case "invite": content = <InviteView onBack={() => navigate("home")} onToast={notify} />; break;
@@ -371,8 +371,8 @@ export default function Dashboard() {
       </aside>
 
       <AssistantChat open={chatOpen} setOpen={setChatOpen} title="چاره‌یار ناوگان" subtitle="راهنمای هوشمند امدادگران" />
-      <VerificationNotices user={user}/>
-      {verificationOpen&&<PendingVerificationDialog onClose={()=>setVerificationOpen(false)}/>}
+      <VerificationNotices user={user} onCompleteVerification={()=>navigate("documents")}/>
+      {verificationOpen&&<PendingVerificationDialog onClose={()=>setVerificationOpen(false)} onCompleteVerification={()=>navigate("documents")}/>}
       {pendingFeatureOpen && <PendingFeatureDialog onClose={() => setPendingFeatureOpen(false)} />}
       {customerSheet && <CustomerSheet load={customerSheet} onClose={() => setCustomerSheet(null)} onToast={notify} />}
       {toast && <div className="toast-message" role="status"><span><Icon name="check" size={17} /></span>{toast}<button type="button" onClick={() => setToast("")} aria-label="بستن پیام"><Icon name="close" size={15} /></button></div>}

@@ -3,7 +3,7 @@ import {useEffect,useId,useRef} from "react";
 import {Icon} from "./Icons";
 import "./pending-feature.css";
 
-export function PendingFeatureDialog({onClose,titleText,descriptionText}: {onClose: () => void;titleText?:string;descriptionText?:string}) {
+export function PendingFeatureDialog({onClose,titleText,descriptionText,actionLabel,onConfirm}: {onClose: () => void;titleText?:string;descriptionText?:string;actionLabel?:string;onConfirm?:()=>void}) {
   const dialog = useRef<HTMLDialogElement>(null);
   const title = useId(), description = useId();
   useEffect(() => {
@@ -29,6 +29,6 @@ export function PendingFeatureDialog({onClose,titleText,descriptionText}: {onClo
     <span className="pending-feature-icon" aria-hidden="true"><Icon name="clock" size={30}/></span>
     <h2 id={title}>{titleText||"ماژول در حال تکمیل است"}</h2>
     <p id={description}>{descriptionText||"این بخش به‌زودی فعال می‌شود."}</p>
-    <button className="pending-feature-confirm" type="button" onClick={onClose}>متوجه شدم</button>
+    <button className="pending-feature-confirm" type="button" onClick={onConfirm||onClose}>{actionLabel||"متوجه شدم"}</button>
   </dialog>;
 }

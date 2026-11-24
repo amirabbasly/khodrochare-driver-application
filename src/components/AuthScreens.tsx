@@ -234,11 +234,13 @@ function PlateField({
 }
 
 function DocumentUpload({
+  label="تصویر کارت ملی",
   fileName,
   preview,
   onPick,
   onClear,
 }: {
+  label?:string;
   fileName: string;
   preview: string;
   onPick: (file: File) => void;
@@ -254,7 +256,7 @@ function DocumentUpload({
 
   return (
     <div className="form-field">
-      <span className="field-label">تصویر کارت ملی یا شناسنامه <b className="field-required">*</b></span>
+      <span className="field-label">{label} <b className="field-required">*</b></span>
       <div
         className={`doc-dropzone${dragging ? " is-dragging" : ""}${fileName ? " has-file" : ""}`}
         onClick={() => inputRef.current?.click()}
@@ -273,7 +275,7 @@ function DocumentUpload({
         }}
         role="button"
         tabIndex={0}
-        aria-label="بارگذاری تصویر کارت ملی یا شناسنامه"
+        aria-label={`بارگذاری ${label}`}
       >
         <input
           ref={inputRef}
@@ -288,7 +290,7 @@ function DocumentUpload({
         {preview ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="پیش‌نمایش کارت ملی" className="doc-preview-image" />
+            <img src={preview} alt={`پیش‌نمایش ${label}`} className="doc-preview-image" />
             <span className="doc-file-chip">
               <Icon name="check" size={13} />
               <span>{fileName}</span>
@@ -413,6 +415,8 @@ export function RegisterScreen() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [docFile, setDocFile] = useState<File | null>(null);
   const [docPreview, setDocPreview] = useState("");
+  const [extraDocs,setExtraDocs]=useState<Record<string,File|null>>({birthCertificate:null,drivingLicense:null,vehicleOwnershipDocument:null});
+  const [vehicleEvidenceType,setVehicleEvidenceType]=useState('VEHICLE_CARD');
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -466,8 +470,8 @@ export function RegisterScreen() {
       setError("کد ملی واردشده معتبر نیست. ۱۰ رقم کد ملی را بررسی کن.");
       return;
     }
-    if (!docFile) {
-      setError("برای احراز هویت، تصویر کارت ملی یا شناسنامه را بارگذاری کن.");
+    if (!docFile||!extraDocs.birthCertificate||!extraDocs.drivingLicense||!extraDocs.vehicleOwnershipDocument) {
+      setError("کارت ملی، شناسنامه، گواهینامه و یکی از مدارک خودرو را بارگذاری کنید.");
       return;
     }
     const normalizedPhone = normalizePhone(phone);
@@ -483,9 +487,11 @@ export function RegisterScreen() {
     setBusy(true);
     try {
       if (!challenge || challenge.phone !== normalizedPhone || !/^\d{6}$/.test(latinDigits(code))) throw new Error("کد تأیید شماره همراه را دریافت و وارد کنید.");
-      const identityDocument = await uploadDocument(docFile);
+      const files=[docFile,extraDocs.birthCertificate!,extraDocs.drivingLicense!,extraDocs.vehicleOwnershipDocument!];
+      for(const file of files)if(!['image/jpeg','image/png'].includes(file.type)||file.size===0||file.size>5*1024*1024)throw new Error('هر مدرک باید تصویر JPG یا PNG و حداکثر ۵ مگابایت باشد.');
+      const [identityDocument,birthCertificate,drivingLicense,vehicleOwnershipDocument]=await Promise.all(files.map(file=>uploadDocument(file)));
       const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
-      const session = await register({ activityCity:activityCity.trim(),activityDistrict:activityDistrict.trim(),challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
+      const session = await register({ activityCity:activityCity.trim(),activityDistrict:activityDistrict.trim(),challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument,birthCertificate,drivingLicense,vehicleOwnershipDocument,vehicleEvidenceType });
       saveSession(session, true);
       authenticate(session.user);
       router.replace("/home");
@@ -578,9 +584,11 @@ export function RegisterScreen() {
             <section className="register-section">
               <div className="register-section-head">
                 <span className="register-step">۴</span>
-                <div><strong>احراز هویت</strong><small>یک تصویر روشن از کارت ملی یا شناسنامه.</small></div>
+                <div><strong>احراز هویت</strong><small>کارت ملی، شناسنامه، گواهینامه و مدرک خودرو الزامی هستند.</small></div>
               </div>
               <DocumentUpload fileName={docFile?.name ?? ""} preview={docPreview} onPick={pickDocument} onClear={clearDocument} />
+              {[['birthCertificate','شناسنامه'],['drivingLicense','گواهینامه'],['vehicleOwnershipDocument','مدرک خودرو']].map(([key,title])=><label className="form-field" key={key}><span className="field-label">{title} <b className="field-required">*</b></span><input type="file" aria-label={`بارگذاری ${title}`} accept="image/jpeg,image/png" onChange={e=>{const file=e.target.files?.[0]||null;setExtraDocs(value=>({...value,[key]:file}));}}/><small>{extraDocs[key]?.name||'تصویر JPG یا PNG، حداکثر ۵ مگابایت'}</small></label>)}
+              <label className="form-field"><span className="field-label">نوع مدرک خودرو</span><select aria-label="نوع مدرک خودرو" value={vehicleEvidenceType} onChange={e=>setVehicleEvidenceType(e.target.value)}><option value="VEHICLE_CARD">کارت ماشین</option><option value="INSURANCE">بیمه‌نامه</option><option value="TECHNICAL_INSPECTION">گواهی معاینه فنی</option></select><small>یک مدرک خوانا به نام خودتان کافی است.</small></label>
             </section>
 
             <section className="register-section register-section--account">

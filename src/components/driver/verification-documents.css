@@ -1,0 +1,12 @@
+﻿.verification-documents .document-row{display:grid;grid-template-columns:39px minmax(0,1fr) auto;gap:12px;padding:18px 0;align-items:start}
+.verification-documents .document-copy{grid-column:2;grid-row:1/span 2;gap:8px}
+.verification-documents .document-copy strong{font-size:14px;color:#284451}
+.verification-documents .document-copy small{white-space:normal;overflow:visible;font-size:12px;line-height:1.8;color:#617682}
+.verification-documents .document-copy label{display:grid;gap:6px;font-size:12px;color:#405763}
+.verification-documents select{min-height:44px;width:100%;max-width:100%;padding:8px;border:1px solid #d6e0e5;border-radius:9px;background:white;color:#284451;font:inherit}
+.verification-documents .document-upload{grid-column:3;grid-row:1;min-height:44px;justify-content:center;font-size:12px;padding:8px}
+.verification-documents .row-more{grid-column:3;grid-row:2;min-height:44px;min-width:44px}
+.verification-documents [role=alert]{padding:12px;color:#a72e24;background:#fff1ef;border-radius:12px;line-height:1.9}
+.verification-documents .doc-privacy{display:block;font-size:12px;line-height:1.9}
+.verification-documents .doc-progress-card p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.9}
+@media(max-width:360px){.verification-documents .document-row{grid-template-columns:30px minmax(0,1fr) auto;gap:7px}.verification-documents .document-icon{width:30px;height:34px}.verification-documents .document-upload{font-size:11px;padding:7px}}

@@ -1,13 +1,12 @@
 "use client";
 
-import {useAuthenticatedUser} from "@/lib/use-backend";
+import {errorMessage} from "@/lib/api";
 import Link from "next/link";
 import {ProfilePhoneChange} from "../ProfilePhoneChange";
 import { IranPlate } from "../IranPlate";
 import { BluePickup } from "../BluePickup";
 import "../account-polish.css";
 import { useState } from "react";
-import { api, getSession, uploadDocument, updateSessionUser, errorMessage, type User } from "@/lib/api";
 import { Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
 import {
@@ -110,7 +109,7 @@ export function ProfileView({
 
       <section className="panel-card driver-menu-list">
         <button type="button" onClick={() => onNavigate("vehicles")}><span className="settings-icon"><Icon name="car" size={18} /></span><span><strong>خودرو و پلاک من</strong><small>مشخصات خودروی امدادی و مدارک آن</small></span><Icon name="chevron" size={17} /></button>
-        <button type="button" onClick={() => onNavigate("documents")}><span className="settings-icon"><Icon name="document" size={18} /></span><span><strong>مدارک و احراز هویت</strong><small>کارت ملی، گواهینامه و بیمه‌نامه</small></span><Icon name="chevron" size={17} /></button>
+        <button type="button" onClick={() => onNavigate("documents")}><span className="settings-icon"><Icon name="document" size={18} /></span><span><strong>مدارک و احراز هویت</strong><small>کارت ملی، شناسنامه، گواهینامه و مدرک خودرو</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onNavigate("training")}><span className="settings-icon"><Icon name="book" size={18} /></span><span><strong>آموزش امداد</strong><small>دوره‌های حرفه‌ای ناوگان</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onNavigate("maintenance")}><span className="settings-icon"><Icon name="refresh" size={18} /></span><span><strong>آخرین سرویس‌های من</strong><small>پروندهٔ نگهداری خودرو</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onToast("تنظیمات اعلان‌های ناوگان باز شد")}><span className="settings-icon"><Icon name="bell" size={18} /></span><span><strong>تنظیمات اعلان‌ها</strong><small>بار جدید، یادآور و پیام‌ها</small></span><Icon name="chevron" size={17} /></button>
@@ -150,7 +149,7 @@ export function VehicleView({
         <div className="vehicle-card-head">
           <span className="vehicle-card-icon"><Icon name="car" size={26} /></span>
           <div><small>خودروی اصلی ناوگان</small><strong>{model}</strong><span>{vehicleType}</span></div>
-          <span className="vehicle-verified"><Icon name="shield" size={13} /> تأییدشده</span>
+          <span className="vehicle-verified"><Icon name="shield" size={13} /> خودروی ثبت‌شده</span>
         </div>
         <PlateDisplay plate={plate} />
         <div className="vehicle-card-stats">
@@ -212,109 +211,7 @@ export function VehicleView({
   );
 }
 
-const DOCUMENTS = [
-  { id: "national", title: "کارت ملی / شناسنامه", note: "ثبت‌شده هنگام ثبت‌نام", icon: "document" as const, ready: true },
-  { id: "license", title: "گواهینامه پایه یک", note: "برای حمل خودرو و بار سنگین", icon: "shield" as const, ready: false },
-  { id: "insurance", title: "بیمه‌نامهٔ خودروی امدادی", note: "شخص ثالث و بدنه", icon: "car" as const, ready: true },
-  { id: "inspection", title: "گواهی معاینهٔ فنی", note: "اعتبار یک‌ساله", icon: "calendar" as const, ready: false },
-];
-
-export function DocumentsView({
-  session,
-  onBack,
-  onToast,
-  onPendingFeature,
-}: {
-  session: DriverSession;
-  onBack: () => void;
-  onToast: (message: string) => void;
-  onPendingFeature: () => void;
-}) {
-  const user=useAuthenticatedUser();
-  const verificationLabel=user?.verificationStatus==="APPROVED"?"احراز هویت تأیید شده است":user?.verificationStatus==="NEEDS_CORRECTION"?"نیازمند اصلاح؛ اپراتور با شما تماس می‌گیرد":"احراز هویت در صف بررسی قرار دارد";
-  const [saved, setUploaded] = useState<Record<string, boolean>>({});
-  const uploaded: Record<string, boolean> = { ...saved, national: saved.national || !!session.documentName };
-  const [busy, setBusy] = useState(false);
-  const completed = DOCUMENTS.filter((document) => uploaded[document.id]).length;
-  const percent = Math.round((completed / DOCUMENTS.length) * 100);
-
-  async function uploadIdentity(file: File, id: string) {
-    if (id !== "national") { onPendingFeature(); return; }
-    if (busy) return;
-    setBusy(true);
-    try {
-      const reference = await uploadDocument(file);
-      await api("/me/identity-document", { method: "POST", body: reference });
-      const updated=await api<User>("/me");updateSessionUser(updated);window.dispatchEvent(new CustomEvent("khodrochare:user",{detail:updated}));
-      setUploaded(current => ({ ...current, national: true }));
-      onToast("مدرک هویتی در سرور ثبت شد.");
-    } catch (error) { onToast(errorMessage(error)); }
-    finally { setBusy(false); }
-  }
-  async function downloadIdentity(id: string) {
-    const documentId = getSession()?.user.identityDocumentId;
-    if (id !== "national") { onPendingFeature(); return; }
-    if (!documentId) { onToast("مدرکی برای نمایش در سرور ثبت نشده است."); return; }
-    try {
-      const file = await api<Blob>(`/documents/${documentId}`, { responseType: "blob" });
-      const url = URL.createObjectURL(file);
-      const anchor = document.createElement("a"); anchor.href = url; anchor.download = "identity-document"; anchor.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (error) { onToast(errorMessage(error)); }
-  }
-  return (
-    <div className="subpage">
-      <PageTitle title="مدارک و احراز هویت" subtitle="پذیرش بار و استفاده از ماژول‌ها پس از تأیید اپراتور فعال می‌شود" onBack={onBack} />
-
-      <section className="doc-progress-card">
-        <div className="doc-progress-head">
-          <span className="doc-progress-icon"><Icon name="shield" size={24} /></span>
-          <div><small>وضعیت احراز هویت ناوگان</small><strong>{faDigits(String(completed))} از {faDigits(String(DOCUMENTS.length))} مدرک ثبت شد</strong></div>
-          <b>{percent.toLocaleString("fa-IR")}٪</b>
-        </div>
-        <div className="doc-progress-bar"><span style={{ width: `${percent}%` }} /></div>
-        <p>{verificationLabel}</p>
-      </section>
-
-      <section className="panel-card document-list">
-        <SectionTitle title="مدارک من" caption="تصویر JPG یا PNG مدرک را بارگذاری کن." />
-        {DOCUMENTS.map((document) => {
-          const isReady = uploaded[document.id];
-          return (
-            <article className="document-row" key={document.id}>
-              <span className={`document-icon${isReady ? " is-ready" : ""}`}><Icon name={document.icon} size={19} /></span>
-              <div className="document-copy">
-                <strong>{document.title}</strong>
-                <small>{document.note}{document.id === "national" && session.documentName ? ` · ${session.documentName}` : ""}</small>
-              </div>
-              {isReady ? (
-                <span className="status-pill status-pill--done"><i />ثبت‌شده</span>
-              ) : (
-                <label className="document-upload">
-                  <input
-                    type="file"
-                    onClick={event => { if (document.id !== "national") { event.preventDefault(); onPendingFeature(); } }}
-                    accept="image/png,image/jpeg" disabled={busy}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      event.target.value = "";
-                      if (!file) return;
-                      void uploadIdentity(file, document.id);
-                    }}
-                  />
-                  <Icon name="upload" size={14} /> بارگذاری
-                </label>
-              )}
-              <button className="row-more" type="button" onClick={() => void downloadIdentity(document.id)} aria-label="گزینه‌های مدرک"><Icon name="more" size={18} /></button>
-            </article>
-          );
-        })}
-      </section>
-
-      <div className="doc-privacy"><Icon name="shield" size={18} /><p>تصاویر مدارک فقط برای احراز هویت ناوگان استفاده می‌شوند، رمزنگاری می‌شوند و در اختیار هیچ شخص ثالثی قرار نمی‌گیرند.</p></div>
-    </div>
-  );
-}
+export {VerificationDocuments as DocumentsView} from './VerificationDocuments';
 
 export function TrainingView({ onBack, onToast }: { onBack: () => void; onToast: (message: string) => void }) {
   const completed = courses.filter((course) => course.progress === 100).length;
@@ -423,7 +320,7 @@ export function SupportView({ onBack, onToast }: { onBack: () => void; onToast: 
           <details><summary>چطور بار آزاد بگیرم؟ <span>+</span></summary><p>آمادگی را فعال کن و در اعلام بار بارهای آزاد همکاران را ببین؛ با تأیید بار، مأموریت در «بارهای من» ثبت می‌شود.</p></details>
           <details><summary>چرا باری به من نشان داده نمی‌شود؟ <span>+</span></summary><p>اگر آمادگی غیرفعال باشد، اپلیکیشن باری نشان نمی‌دهد. محدودهٔ خدمت و ساعت شیفت را هم بررسی کن.</p></details>
           <details><summary>تسویهٔ بار چطور انجام می‌شود؟ <span>+</span></summary><p>پس از تحویل بار، مبلغ به کیف پول ناوگان اضافه می‌شود و در روزهای تسویه قابل برداشت است.</p></details>
-          <details><summary>مدارک لازم برای تأیید ناوگان چیست؟ <span>+</span></summary><p>کارت ملی یا شناسنامه، گواهینامهٔ متناسب با نوع خودرو، بیمه‌نامه و معاینهٔ فنی.</p></details>
+          <details><summary>مدارک لازم برای تأیید ناوگان چیست؟ <span>+</span></summary><p>کارت ملی و شناسنامه و گواهینامه، به‌علاوه یکی از کارت ماشین، بیمه‌نامه یا گواهی معاینه فنی به نام خودتان.</p></details>
         </section>
         <section className="panel-card support-message">
           <div className="support-message-icon"><Icon name="chat" size={22} /></div>

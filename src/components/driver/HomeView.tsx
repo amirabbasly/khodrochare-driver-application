@@ -1,4 +1,5 @@
 "use client";
+import {MainServiceShortcuts} from "../MainServiceShortcuts";
 import type {PendingLoadAction} from "@/lib/use-driver-feed";
 
 import Image from "next/image";
@@ -374,6 +375,7 @@ export function HomeView({
             />
           ))}
         </div>
+        <MainServiceShortcuts onImport={onPendingFeature} onMarket={()=>onNavigate("market")} sellHref={`${(process.env.NEXT_PUBLIC_CUSTOMER_APP_URL||"https://app.khodrochare.ir").replace(/\/$/,"")}/home?view=hall`}/>
       </section>
 
       <HeroSlider onNavigate={onNavigate} />

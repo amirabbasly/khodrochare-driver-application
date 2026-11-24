@@ -6,6 +6,8 @@ import { Icon } from "@/components/Icons";
 import type { ArtId } from "@/components/ServiceIllustration";
 
 export type View =
+  | "diagnostic"
+  | "market"
   | "home"
   | "wallet"
   | "shahr"
@@ -190,8 +192,8 @@ export const moreServices: DriverService[] = [
   },
   {
     id: "diagnostic",
-    name: "عیب‌یابی هوشمند",
-    note: "دیاگ تخصصی خودرو",
+    name: "دیاگ سیار",
+    note: "دیاگ، GPS و ریمپ",
     category: "tech",
     description: "با اتصال دستگاه عیب‌یاب، خطاهای موتور و گیربکس را قبل از اعزام بعدی بررسی کن. گزارش کامل در پروفایل خودرو ذخیره می‌شود.",
   },

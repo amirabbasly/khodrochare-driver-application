@@ -146,5 +146,12 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
     setLoads(items => items.map(item => item.id === load.id ? toLoad(request) : item));
     return true;
   };
-  return { earnings, loads, active, tracking, accept, status, refresh, pendingAction };
+  const reloadRequest = async (id:string) => {
+    revision.current++;invalidateRefresh();
+    const request=await api<AssistanceRequest>(`/requests/${id}`);
+    revision.current++;invalidateRefresh();
+    setLoads(items=>[...items.filter(item=>item.id!==id),toLoad(request)]);
+    window.dispatchEvent(new Event('khodrochare:wallet-refresh'));
+  };
+  return { earnings, loads, active, tracking, accept, status, refresh, reloadRequest, pendingAction };
 }

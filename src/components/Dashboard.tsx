@@ -1,4 +1,6 @@
 "use client";
+import {DiagnosticOffer} from "./DiagnosticOffer";
+import {MarketStore} from "./MarketStore";
 import {PendingFeatureDialog} from "./PendingFeature";
 import {AssistantChat} from "./AssistantChat";
 import {WalletPanel} from "./WalletPanel";
@@ -154,6 +156,7 @@ export default function Dashboard() {
   }
 
   function openService(service: DriverService) {
+    if(service.id==="diagnostic"){navigate("diagnostic");return;}
     if (service.id === "training") {
       navigate("training");
       return;
@@ -216,6 +219,8 @@ export default function Dashboard() {
         />
       );
       break;
+    case "diagnostic": content=<DiagnosticOffer onBack={()=>navigate("home")}/>;break;
+    case "market": content=<MarketStore onBack={()=>navigate("home")}/>;break;
     case "wallet": content = <WalletPanel onBack={() => navigate("home")} />; break;
     case "shahr": content = <IranShahrView userName={userName} onBack={() => navigate("home")} onToast={notify} onTakeLoad={takePost} />; break;
     case "profile":
@@ -238,7 +243,7 @@ export default function Dashboard() {
     case "readiness": content = <ReadinessView ready={ready} onToggle={toggleReady} onBack={() => navigate("home")} onToast={showPendingFeature} />; break;
     case "job":
       content = activeLoad
-        ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onPartsQuote={async () => { await feed.refresh(); }} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
+        ? <JobView key={activeLoad.id} load={activeLoad} tracking={feed.tracking} onPartsQuote={async () => { await feed.reloadRequest(activeLoad.id); }} onArrive={async load => { await feed.status(load, "ARRIVED"); }} onBack={() => navigate("loads")} onToast={notify} onComplete={completeLoad} onOpenChat={() => navigate("shahr")} />
         : <LoadsView pendingAction={feed.pendingAction} loads={loads} onBack={() => navigate("home")} onToast={showPendingFeature} onAccept={acceptLoad} onReject={rejectLoad} onOpenJob={(load) => { setSelectedLoadId(load.id); navigate("job"); }} onProfile={(load) => setCustomerSheet(load)} />;
       break;
     case "parts":

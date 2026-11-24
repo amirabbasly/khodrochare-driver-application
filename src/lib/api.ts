@@ -9,7 +9,7 @@ export type VehicleModel = { id: string; name: string; groupId: string; group: {
 export type Payment = {method?:string;cashReportedAt?:string|null; gatewayMode?:"sandbox"|"live";id:string;status:"AWAITING_TRANSFER"|"SUBMITTED"|"VERIFIED"|"REJECTED"|"AWAITING_PAYMENT"|"GATEWAY_PENDING"|"SANDBOX_VERIFIED"|"REFUND_REQUIRED";serviceToman:number;partsToman:number;amountToman:number;commissionPercent:number;commissionToman:number;driverShareToman:number };
 export type ServiceCode = "REPAIR" | "TOWING" | "MOBILE_CARWASH" | "PERIODIC_SERVICE" | "INSPECTION";
 export type Vehicle = { id: string; name: string; plate: string };
-export type User = { id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
+export type User = { activityCity?: string | null; activityDistrict?: string | null; id: string; role: "CUSTOMER" | "DRIVER"; fullName: string; phone: string; nationalId: string; vehiclePlate?: string; vehicleType?: string; services: ServiceCode[]; identityDocumentId?: string; vehicles?: Vehicle[] };
 export type Session = { token: string; expiresAt: string; user: User };
 export type PricingBreakdown = {items?:{code:string;name:string}[];originalPriceToman?:number;discountPercent?:number; service: ServiceCode; baseToman: number | null; perKmToman?: number | null; distanceChargeToman?: number | null; surchargePercent?: number; totalToman: number | null; requiresAgreement: boolean; partsPricing?: string; vehicleGroup?: string; transportKind?: string };
 export type AssistanceRequest = { customer?: { fullName: string }; driver?: { fullName: string } | null; driverCommissionConfirmedAt?: string | null; operationsStartedAt?: string | null; payment?: { method?:string;cashReportedAt?:string|null; status: Payment["status"]; amountToman?: number; driverShareToman?: number; checkouts?: { id: string }[] } | null; id: string; customerId: string; driverId: string | null; service: ServiceCode; status: "PENDING" | "ACCEPTED" | "ARRIVED" | "COMPLETED" | "CANCELLED" | "EXPIRED"; vehicleName: string; vehiclePlate: string; originAddress?: string | null; destinationAddress?: string | null; partsQuoteToman?: number | null; partsQuoteVersion?: number; partsApprovedToman?: number | null; problem: string | null; originLat: number; originLng: number; destinationLat: number | null; destinationLng: number | null; distanceMeters: number | null; distanceMethod: string | null; priceToman: number | null; pricingBreakdown?: PricingBreakdown | null; createdAt: string; updatedAt: string };
@@ -60,9 +60,10 @@ export function updateSessionUser(user: User) {
 }
 function serverMessage(status: number, data: { error?: string; issues?: { path: (string | number)[] }[] }) {
   if (status === 400 && data.issues?.length) {
-    const fields: Record<string, string> = { fullName: "نام و نام خانوادگی", phone: "شماره تماس", password: "رمز عبور (حداقل ۸ کاراکتر)", nationalId: "کد ملی", vehiclePlate: "پلاک خودرو", origin: "مبدأ", destination: "مقصد", problem: "مشکل خودرو", services: "خدمات", identityDocument: "مدرک هویتی" };
+    const fields: Record<string, string> = { activityCity:"شهر محل فعالیت",activityDistrict:"بخش محل فعالیت",fullName: "نام و نام خانوادگی", phone: "شماره تماس", password: "رمز عبور (حداقل ۸ کاراکتر)", nationalId: "کد ملی", vehiclePlate: "پلاک خودرو", origin: "مبدأ", destination: "مقصد", problem: "مشکل خودرو", services: "خدمات", identityDocument: "مدرک هویتی" };
     return `اطلاعات ${fields[String(data.issues[0].path[0])] || "فرم"} معتبر نیست.`;
   }
+  if (status < 500 && typeof data.error === 'string' && /[\u0600-\u06ff]/.test(data.error)) return data.error.slice(0, 1000);
   const known: Record<string, string> = {
     "SMS provider not configured": "سرویس پیامک هنوز فعال نیست؛ هشدار داخل برنامه را بدون گزینه پیامک ثبت کنید.",
     "Market product not found": "این قطعه پیدا نشد یا دیگر فعال نیست.",

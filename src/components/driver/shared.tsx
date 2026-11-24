@@ -26,6 +26,8 @@ export type View =
 export type PartKey = "gearbox" | "engine" | "body" | "electrical";
 
 export type DriverSession = {
+  activityCity?: string | null;
+  activityDistrict?: string | null;
   name?: string;
   username?: string;
   phone?: string;

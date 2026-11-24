@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import {ProfilePhoneChange} from "../ProfilePhoneChange";
 import { IranPlate } from "../IranPlate";
 import { BluePickup } from "../BluePickup";
 import "../account-polish.css";
@@ -41,15 +42,18 @@ export function ProfileView({
   onNavigate,
 }: {
   session: DriverSession;
-  onSave: (name: string, phone: string, nationalCode: string) => void;
+  onSave: (name: string, nationalCode: string, activityCity: string, activityDistrict: string) => Promise<void>;
   onBack: () => void;
   onToast: (message: string) => void;
   onNavigate: (view: View) => void;
 }) {
   const name = session.name || "سفیر خودرو چاره";
   const [fullName, setFullName] = useState(name);
-  const [phone] = useState(session.phone || session.username || "");
-  const [nationalCode] = useState(session.nationalCode || "");
+  const phone = session.phone || session.username || "";
+  const [nationalCode,setNationalCode] = useState(session.nationalCode || "");
+  const [activityCity,setActivityCity]=useState(session.activityCity||"");
+  const [activityDistrict,setActivityDistrict]=useState(session.activityDistrict||"");
+  const [saving,setSaving]=useState(false),[saveError,setSaveError]=useState("");
 
   return (
     <div className="subpage">
@@ -91,18 +95,15 @@ export function ProfileView({
           </div>
           <form
             className="profile-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              onSave(fullName.trim(), phone.trim(), nationalCode.trim());
-
-            }}
+            onSubmit={async(event) => {event.preventDefault();if(saving)return;setSaving(true);setSaveError("");try{await onSave(fullName.trim(), nationalCode.trim(), activityCity.trim(), activityDistrict.trim());}catch(error){setSaveError(errorMessage(error));}finally{setSaving(false);}}}
           >
             <label className="form-field"><span className="field-label">نام و نام خانوادگی</span><span className="field-control"><input value={fullName} onChange={(event) => setFullName(event.target.value)} required /></span></label>
             <label className="form-field"><span className="field-label">شمارهٔ تماس</span><span className="field-control field-control--ltr"><input type="tel" value={phone} readOnly dir="ltr" /></span></label>
-            <label className="form-field"><span className="field-label">کد ملی</span><span className="field-control field-control--ltr"><input inputMode="numeric" value={nationalCode} readOnly placeholder="۱۰ رقم" dir="ltr" /></span></label>
-            <p className="account-help">برای اصلاح شماره تماس یا کد ملی با پشتیبانی تماس بگیرید.</p>
-            <button className="primary-button" type="submit">ذخیرهٔ تغییرات <Icon name="check" size={16} /></button>
+            <label className="form-field"><span className="field-label">کد ملی</span><span className="field-control field-control--ltr"><input inputMode="numeric" value={nationalCode} onChange={e=>setNationalCode(e.target.value)} required minLength={10} maxLength={10} placeholder="۱۰ رقم" dir="ltr" /></span></label>
+            <label className="form-field"><span className="field-label">شهر محل فعالیت</span><span className="field-control"><input value={activityCity} onChange={e=>setActivityCity(e.target.value)} minLength={2} maxLength={100} required/></span></label><label className="form-field"><span className="field-label">بخش / منطقه محل فعالیت</span><span className="field-control"><input value={activityDistrict} onChange={e=>setActivityDistrict(e.target.value)} maxLength={150}/></span></label><p className="account-help">شهر و بخش فقط برای نمایش اطلاعات است و روی دریافت بار تأثیری ندارد.</p>{saveError&&<p className="form-error" role="alert">{saveError}</p>}
+            <button className="primary-button" type="submit" disabled={saving}>{saving?"در حال ذخیره…":"ذخیرهٔ تغییرات"} <Icon name="check" size={16} /></button>
           </form>
+          <ProfilePhoneChange/>
         </section>
       </div>
 
@@ -112,7 +113,7 @@ export function ProfileView({
         <button type="button" onClick={() => onNavigate("training")}><span className="settings-icon"><Icon name="book" size={18} /></span><span><strong>آموزش امداد</strong><small>دوره‌های حرفه‌ای ناوگان</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onNavigate("maintenance")}><span className="settings-icon"><Icon name="refresh" size={18} /></span><span><strong>آخرین سرویس‌های من</strong><small>پروندهٔ نگهداری خودرو</small></span><Icon name="chevron" size={17} /></button>
         <button type="button" onClick={() => onToast("تنظیمات اعلان‌های ناوگان باز شد")}><span className="settings-icon"><Icon name="bell" size={18} /></span><span><strong>تنظیمات اعلان‌ها</strong><small>بار جدید، یادآور و پیام‌ها</small></span><Icon name="chevron" size={17} /></button>
-        <button type="button" onClick={() => onToast("تنظیمات امنیتی در نسخهٔ کامل فعال می‌شود")}><span className="settings-icon"><Icon name="shield" size={18} /></span><span><strong>امنیت حساب</strong><small>رمز عبور و ورود دومرحله‌ای</small></span><Icon name="chevron" size={17} /></button>
+        <button type="button" onClick={() => window.location.assign("/forgot-password")}><span className="settings-icon"><Icon name="shield" size={18} /></span><span><strong>امنیت حساب</strong><small>بازیابی و تغییر رمز عبور</small></span><Icon name="chevron" size={17} /></button>
       </section>
     </div>
   );

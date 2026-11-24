@@ -403,6 +403,8 @@ export function RegisterScreen() {
   const [codeNotice, setCodeNotice] = useState("");
   const [name, setName] = useState("");
   const [vehicleType, setVehicleType] = useState("");
+  const [activityCity,setActivityCity]=useState("");
+  const [activityDistrict,setActivityDistrict]=useState("");
   const [plate, setPlate] = useState({ two: "", letter: "ب", three: "", province: "" });
   const [nationalCode, setNationalCode] = useState("");
   const [services, setServices] = useState<string[]>([]);
@@ -447,6 +449,7 @@ export function RegisterScreen() {
       setError("نام و نام خانوادگی را کامل وارد کن.");
       return;
     }
+    if (activityCity.trim().length < 2) { setError("شهر محل فعالیت را وارد کنید."); return; }
     if (!vehicleType.trim()) {
       setError("نوع خودرو را وارد کن؛ مثلاً نیسان آبی.");
       return;
@@ -482,7 +485,7 @@ export function RegisterScreen() {
       if (!challenge || challenge.phone !== normalizedPhone || !/^\d{6}$/.test(latinDigits(code))) throw new Error("کد تأیید شماره همراه را دریافت و وارد کنید.");
       const identityDocument = await uploadDocument(docFile);
       const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
-      const session = await register({ challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
+      const session = await register({ activityCity:activityCity.trim(),activityDistrict:activityDistrict.trim(),challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
       saveSession(session, true);
       authenticate(session.user);
       router.replace("/home");
@@ -509,6 +512,8 @@ export function RegisterScreen() {
               </div>
               <div className="register-grid">
                 <Field label="نام و نام خانوادگی" name="full-name" value={name} onChange={setName} placeholder="مثلاً امیرحسین سعادتی" autoComplete="name" minLength={3} maxLength={60} />
+                <Field label="شهر محل فعالیت" name="activity-city" value={activityCity} onChange={setActivityCity} placeholder="مثلاً تهران" autoComplete="address-level2" minLength={2} maxLength={100} />
+                <Field label="بخش / منطقه محل فعالیت" name="activity-district" value={activityDistrict} onChange={setActivityDistrict} placeholder="مثلاً بخش مرکزی یا منطقه ۲" maxLength={150} required={false} hint="این اطلاعات فقط در پروفایل نمایش داده می‌شود و روی دریافت بار تأثیری ندارد." />
                 <Field label="کد ملی" name="national-code" value={nationalCode} onChange={(value) => setNationalCode(normalizeNationalCode(value))} placeholder="۱۰ رقم کد ملی" inputMode="numeric" minLength={10} maxLength={10} ltr hint="کد ملی ۱۰ رقمی، بدون خط تیره." />
               </div>
             </section>

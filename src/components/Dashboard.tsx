@@ -112,7 +112,7 @@ export default function Dashboard() {
   const [toast, setToast] = useState("");
   const user = useAuthenticatedUser();
   const serviceIds = { REPAIR: "repair", TOWING: "transport", MOBILE_CARWASH: "carwash", PERIODIC_SERVICE: "maintenance", INSPECTION: "inspection" };
-  const session: DriverSession = { name: user?.fullName || "سفیر خودرو چاره", username: user?.phone, phone: user?.phone, nationalCode: user?.nationalId, plate: user?.vehiclePlate, vehicleType: user?.vehicleType, services: user?.services.map(code => serviceIds[code]), documentName: user?.identityDocumentId ? "مدرک هویتی ثبت‌شده" : undefined };
+  const session: DriverSession = { activityCity:user?.activityCity,activityDistrict:user?.activityDistrict, name: user?.fullName || "سفیر خودرو چاره", username: user?.phone, phone: user?.phone, nationalCode: user?.nationalId, plate: user?.vehiclePlate, vehicleType: user?.vehicleType, services: user?.services.map(code => serviceIds[code]), documentName: user?.identityDocumentId ? "مدرک هویتی ثبت‌شده" : undefined };
   const [ready, setReady] = useState(false);
   const [selectedLoadId, setSelectedLoadId] = useState<string | null>(null);
   const [rejectedIds, setRejectedIds] = useState<string[]>([]);
@@ -186,7 +186,7 @@ export default function Dashboard() {
     setSelectedLoadId(null); navigate("loads"); notify("پایان مأموریت در سرور ثبت شد.");
   }
   function takePost() { notify("ثبت بار از اعلام بار هنوز در سرور فعال نشده است."); }
-  async function saveProfile(fullName: string) { try { const updated = await api<User>('/me', { method: 'PATCH', body: { fullName } }); updateSessionUser(updated); window.dispatchEvent(new CustomEvent('khodrochare:user', { detail: updated })); notify('نام شما ذخیره شد.'); } catch (error) { notify(errorMessage(error)); } }
+  async function saveProfile(fullName: string, nationalId: string, activityCity: string, activityDistrict: string) { const updated = await api<User>('/me', { method: 'PATCH', body: { fullName, nationalId, activityCity, activityDistrict } }); updateSessionUser(updated); window.dispatchEvent(new CustomEvent('khodrochare:user', { detail: updated })); notify('اطلاعات شما ذخیره شد.'); }
   function saveVehicle() { showPendingFeature(); }
   async function logout() {
     try { await backendLogout(); } catch (error) { notify(errorMessage(error)); }

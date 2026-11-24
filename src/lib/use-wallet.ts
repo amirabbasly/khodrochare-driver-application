@@ -23,8 +23,8 @@ export function useWallet(){
       }
     }
     const focus=()=>{void load();};
-    void load();window.addEventListener('focus',focus);
-    return()=>{controller.abort();window.removeEventListener('focus',focus);};
+    void load();window.addEventListener('focus',focus);window.addEventListener('khodrochare:wallet-refresh',focus);
+    return()=>{controller.abort();window.removeEventListener('focus',focus);window.removeEventListener('khodrochare:wallet-refresh',focus);};
   },[]);
   return{data,error};
 }

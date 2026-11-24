@@ -13,13 +13,13 @@ export function SplashGate({ children }: { children: ReactNode }) {
   const [typedMessage, setTypedMessage] = useState("");
   const {status,error,retry} = useSessionState();
   const pathname = usePathname(), router = useRouter();
-  const authPage = pathname === "/" || pathname === "/register";
+  const authPage = pathname === "/" || pathname === "/register" || pathname === "/login-otp";
   const redirecting = status === "authenticated" && authPage || status === "anonymous" && pathname === "/home";
   const holding = status === "checking" || status === "error" || redirecting;
   const leaving = visible && minimumElapsed && !holding;
 
   useEffect(() => {
-    if (status === "authenticated" && (pathname === "/" || pathname === "/register")) router.replace("/home");
+    if (status === "authenticated" && (pathname === "/" || pathname === "/register" || pathname === "/login-otp")) router.replace("/home");
     else if (status === "anonymous" && pathname === "/home") router.replace("/");
   }, [pathname,status,router]);
 

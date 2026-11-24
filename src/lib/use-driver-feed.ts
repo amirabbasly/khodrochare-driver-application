@@ -13,16 +13,16 @@ export function toLoad(request: AvailableRequest & Partial<AssistanceRequest>): 
   const createdAt = new Date(request.createdAt);
   return {
     driverCommissionConfirmedAt: request.driverCommissionConfirmedAt,
-    operationsStartedAt: request.operationsStartedAt, paymentStatus: request.payment?.status,
+    operationsStartedAt: request.operationsStartedAt,paymentMethod:request.payment?.method, paymentStatus: request.payment?.status, gatewayPaid: request.payment?.status === "VERIFIED" && !!request.payment.checkouts?.length, finalAmountToman: request.payment?.amountToman,
     expiresAt: request.status === "PENDING" && Number.isFinite(createdAt.getTime()) ? new Date(createdAt.getTime() + PENDING_LIFETIME_MS).toISOString() : undefined,
-    id: request.id, customer: "مشتری خودرو چاره", role: "درخواست امداد", rating: 0, tone: 0,
+    id: request.id, customer: request.customer?.fullName || "مشتری خودرو چاره", role: "درخواست امداد", rating: 0, tone: 0,
     car: request.vehicleName, plate: request.vehiclePlate || "—",
     from: request.originAddress || "نشانی مبدأ ثبت نشده",
-    to: request.destinationLat != null && request.destinationLng != null ? request.destinationAddress || "نشانی مقصد ثبت نشده" : "تعمیر در مبدأ",
+    to: request.destinationLat != null && request.destinationLng != null ? request.destinationAddress || "نشانی مقصد ثبت نشده" : request.service==='REPAIR'?"تعمیر در مبدأ":"انجام خدمت در مبدأ",
     distanceKm: (request.distanceMeters || 0) / 1000, price: request.priceToman || 0,
     priceKnown: request.priceToman != null,
     when: Number.isNaN(createdAt.getTime()) ? createdAt.toLocaleString("fa-IR", { timeZone: "Asia/Tehran" }) : loadDateFormatter.format(createdAt),
-    weight: request.service === "TOWING" ? "حمل خودرو" : "تعمیر در محل", note: (request.problem || (request.service === "TOWING" ? "درخواست حمل خودرو" : "درخواست تعمیر در محل")) + (request.service === "REPAIR" ? " · ورودی ۸۰۰٬۰۰۰ تومان؛ هزینه قطعات پس از بررسی خودرو محاسبه می‌شود." : ""),
+    weight: ({TOWING:"حمل خودرو",REPAIR:"تعمیر در محل",MOBILE_CARWASH:"کارواش سیار",PERIODIC_SERVICE:"سرویس دوره‌ای در محل",INSPECTION:"کارشناسی خودرو"})[request.service || "REPAIR"], note: (request.pricingBreakdown?.items?.map(item=>item.name).join("، ") || request.problem || (request.service === "TOWING" ? "درخواست حمل خودرو" : "درخواست تعمیر در محل")) + (request.service === "REPAIR" ? " · ورودی ۸۰۰٬۰۰۰ تومان؛ هزینه قطعات پس از بررسی خودرو محاسبه می‌شود." : ""),
     phone: "", status: request.status === "PENDING" ? "pending" : request.status === "COMPLETED" ? "done" : "active",
     lat: request.originLat, lng: request.originLng, partsQuoteToman: request.partsQuoteToman, partsApprovedToman: request.partsApprovedToman, service: request.service, serverStatus: request.status,
   };
@@ -34,6 +34,7 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
   const [tracking, setTracking] = useState<Tracking>({ driver: null });
   const notifyRef = useRef(notify);
   const fetching = useRef(false);
+  const paidRevision=useRef('');
   const refreshToken=useRef(0),earningsFetching=useRef(false),trackingFetching=useRef(false);
   const invalidateRefresh=useCallback(()=>{refreshToken.current++;fetching.current=false;},[]);
   const busy = useRef(false);
@@ -60,6 +61,8 @@ export function useDriverFeed(ready: boolean, notify: (message: string) => void)
       ]);
       if (signal?.aborted || busy.current || revision.current!==startedRevision) return;
       const own = assigned.filter(r => !["CANCELLED", "EXPIRED"].includes(r.status));
+      const paid=own.filter(r=>r.payment?.status==='VERIFIED').map(r=>r.id+':'+r.payment?.amountToman).sort().join('|');
+      if(paid!==paidRevision.current){paidRevision.current=paid;window.dispatchEvent(new Event('khodrochare:wallet-refresh'));}
       // The available endpoint deliberately omits private fields and status.
       const offers = pending.filter(r => Date.parse(r.createdAt) + PENDING_LIFETIME_MS > Date.now()).map(request => ({ ...request, status: "PENDING" as const, driverId: null }));
       const merged = new Map([...offers, ...own].map(r => [r.id, toLoad(r)]));

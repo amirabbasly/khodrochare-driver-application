@@ -61,7 +61,8 @@ export type LoadOffer = {
   expiresAt?: string;
   driverCommissionConfirmedAt?: string | null;
   operationsStartedAt?: string | null;
-  paymentStatus?: string;
+  paymentMethod?:string;
+  paymentStatus?: string; gatewayPaid?: boolean; finalAmountToman?: number;
   service?: string;
   partsQuoteToman?: number | null;
   partsApprovedToman?: number | null;

@@ -1,7 +1,9 @@
-const CACHE_NAME = "khodro-chare-fleet-v7";
+const CACHE_NAME = "khodro-chare-fleet-v8";
 const APP_SHELL = [
   "/",
   "/register",
+  "/login-otp",
+  "/forgot-password",
   "/home",
   "/offline.html",
   "/khodrochare-wordmark.png",

@@ -275,6 +275,7 @@ export default function Dashboard() {
   return (
     <div className="app-frame" dir="rtl">
       {user && <><LocationPermissionModal /><LocationTelemetry /></>}
+      {balance<0&&<section className="panel-card" role="alert"><p>شما تا زمان پرداخت کمیسیون اجازه گرفتن بار جدید را ندارید.</p><p>بدهی کمیسیون: {Math.abs(balance).toLocaleString("fa-IR")} تومان</p><button className="primary-button" onClick={()=>navigate("wallet")}>پرداخت بدهی و شارژ حساب</button></section>}
       <header className="app-header">
         <div className="app-header-inner">
           <div className="header-menu-wrap">

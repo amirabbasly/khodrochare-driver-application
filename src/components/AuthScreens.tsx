@@ -6,7 +6,7 @@ import "@/components/driver/service-picker.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { login, register, saveSession, normalizePhone, uploadDocument, errorMessage } from "@/lib/api";
+import { api, clearSession, latinDigits, login, register, saveSession, normalizePhone, uploadDocument, errorMessage } from "@/lib/api";
 import { BrandLogo, Icon } from "@/components/Icons";
 import { ServiceIllustration } from "@/components/ServiceIllustration";
 import { IranFlag, providerServices, vehicleSuggestions } from "@/components/driver/shared";
@@ -379,13 +379,13 @@ export function LoginScreen() {
             <Field label="رمز عبور" name="password" type="password" value={password} onChange={setPassword} placeholder="رمز عبورت را وارد کن" autoComplete="current-password" minLength={6} showToggle visible={passwordVisible} onToggle={() => setPasswordVisible((current) => !current)} />
             <div className="form-options">
               <label className="check-label"><input type="checkbox" checked={remember} onChange={(event) => setRemember(event.target.checked)} /><span className="custom-check"><Icon name="check" size={12} /></span><span>مرا به خاطر بسپار</span></label>
-              <button type="button" className="auth-inline-link" onClick={() => setNotice("ورود با کد یک بار مصرف به‌زودی فعال می‌شود.")}>ورود با کد یک بار مصرف</button>
+              <button type="button" className="auth-inline-link" onClick={() => router.push("/login-otp")}>ورود با کد یک بار مصرف</button>
             </div>
             {error && <p className="form-error" role="alert">{error}</p>}
             {notice && <p className="form-notice" role="status">{notice}</p>}
             <button className="primary-button auth-submit" type="submit" disabled={busy} aria-busy={busy}>ورود به حساب <Icon name="arrow-left" size={18} /></button>
           </form>
-          <p className="auth-switch">حساب کاربری نداری؟ <Link href="/register">ثبت‌نام ناوگان</Link></p>
+          <p className="auth-switch"><Link href="/forgot-password">فراموشی رمز عبور</Link></p><p className="auth-switch">حساب کاربری نداری؟ <Link href="/register">ثبت‌نام ناوگان</Link></p>
           <p className="auth-legal">با ورود، <a href="#terms">قوانین و مقررات خودرو چاره</a> را می‌پذیری.</p>
         </section>
         <AuthVisual />
@@ -397,6 +397,10 @@ export function LoginScreen() {
 export function RegisterScreen() {
   const router = useRouter();
   const {authenticate} = useSessionState();
+  const [challenge, setChallenge] = useState<{challengeId:string;phone:string;retryAt:number}|null>(null);
+  const [code, setCode] = useState("");
+  const [sendingCode, setSendingCode] = useState(false);
+  const [codeNotice, setCodeNotice] = useState("");
   const [name, setName] = useState("");
   const [vehicleType, setVehicleType] = useState("");
   const [plate, setPlate] = useState({ two: "", letter: "ب", three: "", province: "" });
@@ -475,9 +479,10 @@ export function RegisterScreen() {
 
     setBusy(true);
     try {
+      if (!challenge || challenge.phone !== normalizedPhone || !/^\d{6}$/.test(latinDigits(code))) throw new Error("کد تأیید شماره همراه را دریافت و وارد کنید.");
       const identityDocument = await uploadDocument(docFile);
       const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
-      const session = await register({ fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
+      const session = await register({ challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument });
       saveSession(session, true);
       authenticate(session.user);
       router.replace("/home");
@@ -582,6 +587,15 @@ export function RegisterScreen() {
                 <Field label="شماره تماس" name="phone" type="tel" value={phone} onChange={setPhone} placeholder="۰۹۱۲۳۴۵۶۷۸۹" autoComplete="tel" inputMode="tel" minLength={10} maxLength={16} ltr />
                 <Field label="رمز عبور" name="new-password" type="password" value={password} onChange={setPassword} placeholder="حداقل ۸ کاراکتر" autoComplete="new-password" minLength={8} showToggle visible={passwordVisible} onToggle={() => setPasswordVisible((current) => !current)} />
               </div>
+              <button type="button" className="auth-inline-link" disabled={sendingCode || busy} onClick={async () => {
+                if (sendingCode) return;
+                if (challenge && Date.now() < challenge.retryAt) { setError("برای ارسال دوباره یک دقیقه صبر کنید."); return; }
+                setSendingCode(true); setError("");
+                try { const normalized = normalizePhone(phone); const result = await api<{challengeId:string;retryAfterSeconds:number}>("/auth/drivers/otp/request", {auth:false, method:"POST", body:{phone:normalized,purpose:"REGISTER"}}); setChallenge({challengeId:result.challengeId,phone:normalized,retryAt:Date.now()+result.retryAfterSeconds*1000}); setCode(""); setCodeNotice("کد تأیید ارسال شد و ۵ دقیقه اعتبار دارد."); }
+                catch (error) { setError(errorMessage(error)); } finally { setSendingCode(false); }
+              }}>{sendingCode ? "در حال ارسال…" : challenge ? "ارسال دوباره کد تأیید" : "دریافت کد فعال‌سازی"}</button>
+              {codeNotice && <p role="status">{codeNotice}</p>}
+              <Field label="کد فعال‌سازی" name="registration-code" value={code} onChange={v => setCode(latinDigits(v).replace(/\D/g, "").slice(0,6))} placeholder="کد ۶ رقمی" autoComplete="one-time-code" inputMode="numeric" minLength={6} maxLength={6} ltr />
               <label className="check-label register-consent">
                 <input type="checkbox" defaultChecked required />
                 <span className="custom-check"><Icon name="check" size={12} /></span>
@@ -598,4 +612,14 @@ export function RegisterScreen() {
       </div>
     </main>
   );
+}
+
+export function DriverOtpScreen({ reset = false }: { reset?: boolean }) {
+ const router = useRouter(), { authenticate } = useSessionState();
+ const [phone,setPhone]=useState(""),[code,setCode]=useState(""),[password,setPassword]=useState(""),[confirm,setConfirm]=useState(""),[challenge,setChallenge]=useState<{challengeId:string;retryAfterSeconds:number}|null>(null),[retryAt,setRetryAt]=useState(0),[busy,setBusy]=useState(false),[error,setError]=useState(""),[done,setDone]=useState(false);
+ async function send() { if(busy)return; if(Date.now()<retryAt){setError("برای ارسال دوباره یک دقیقه صبر کنید.");return;} setBusy(true);setError("");try{const result=await api<{challengeId:string;retryAfterSeconds:number}>("/auth/drivers/otp/request",{auth:false,method:"POST",body:{phone:normalizePhone(phone),purpose:reset?"RESET_PASSWORD":"LOGIN"}});setChallenge(result);setCode("");setRetryAt(Date.now()+result.retryAfterSeconds*1000);}catch(e){setError(errorMessage(e));}finally{setBusy(false);} }
+ async function submit(event:FormEvent){event.preventDefault();if(!challenge){await send();return;}if(busy)return;if(reset&&password!==confirm){setError("رمز عبور و تکرار آن یکسان نیستند.");return;}setBusy(true);setError("");try{if(reset){await api("/auth/drivers/password/reset",{auth:false,method:"POST",body:{challengeId:challenge.challengeId,code:latinDigits(code),password}});clearSession();window.dispatchEvent(new Event("khodrochare:unauthorized"));setPassword("");setConfirm("");setCode("");setDone(true);}else{const session=await api<import("@/lib/api").Session>("/auth/drivers/otp/verify",{auth:false,method:"POST",body:{challengeId:challenge.challengeId,code:latinDigits(code),remember:true}});saveSession(session,true);authenticate(session.user);router.replace("/home");}}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
+ return <main className="auth-page" dir="rtl"><div className="auth-layout"><section className="auth-form-panel"><h1>{reset?"فراموشی رمز عبور":"ورود با کد فعال‌سازی"}</h1><p>ابتدا باید ثبت‌نام ناوگان را تکمیل کرده باشید.</p>{done?<p role="status">رمز عبور با موفقیت تغییر کرد.</p>:<form className="auth-form" onSubmit={submit}>
+ {!challenge?<Field label="شماره همراه" name="otp-phone" value={phone} onChange={setPhone} placeholder="۰۹۱۲۳۴۵۶۷۸۹" inputMode="tel" autoComplete="tel" ltr/>:<><p dir="ltr">{normalizePhone(phone)}</p><button type="button" className="auth-inline-link" disabled={busy} onClick={()=>{setChallenge(null);setCode("");setError("");}}>ویرایش شماره</button><Field label="کد فعال‌سازی" name="otp-code" value={code} onChange={v=>setCode(latinDigits(v).replace(/\D/g,"").slice(0,6))} placeholder="کد ۶ رقمی" inputMode="numeric" autoComplete="one-time-code" minLength={6} maxLength={6} ltr/>{reset&&<><Field label="رمز عبور جدید" name="new-password" type="password" value={password} onChange={setPassword} placeholder="حداقل ۸ کاراکتر" minLength={8} autoComplete="new-password"/><Field label="تکرار رمز عبور" name="confirm-password" type="password" value={confirm} onChange={setConfirm} placeholder="تکرار رمز عبور جدید" minLength={8} autoComplete="new-password"/></>}<p>کد تأیید ۵ دقیقه اعتبار دارد.</p><button type="button" className="auth-inline-link" disabled={busy} onClick={()=>void send()}>ارسال دوباره کد</button></>}
+ {error&&<p className="form-error" role="alert">{error}</p>}<button className="primary-button auth-submit" disabled={busy} type="submit">{busy?"در حال بررسی…":!challenge?"دریافت کد تأیید":reset?"ذخیره رمز عبور":"تأیید و ورود"}</button></form>}<p className="auth-switch"><Link href="/">ورود با رمز عبور</Link> · <Link href="/register">ثبت‌نام ناوگان</Link></p></section><AuthVisual/></div></main>;
 }

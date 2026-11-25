@@ -9,6 +9,7 @@ import {useWallet} from "@/lib/use-wallet";
 
 import { useEffect, useState, type ReactNode } from "react";
 import { LocationTelemetry } from "@/components/LocationTelemetry";
+import {CommissionDebtNotice} from './CommissionDebtNotice';
 import { LocationPermissionModal } from "@/components/LocationPermissionModal";
 import { useRouter } from "next/navigation";
 import { api, updateSessionUser, type User, logout as backendLogout, errorMessage } from "@/lib/api";
@@ -292,8 +293,7 @@ export default function Dashboard() {
 
   return (
     <div className="app-frame" dir="rtl">
-      {user && <><LocationPermissionModal /><LocationTelemetry /></>}
-      {balance<0&&<section className="panel-card" role="alert"><p>شما تا زمان پرداخت کمیسیون اجازه گرفتن بار جدید را ندارید.</p><p>بدهی کمیسیون: {Math.abs(balance).toLocaleString("fa-IR")} تومان</p><button className="primary-button" onClick={()=>navigate("wallet")}>پرداخت بدهی و شارژ حساب</button></section>}
+      {user && <><CommissionDebtNotice balance={wallet.data?.balanceToman??null} name={userName} onPay={()=>navigate("wallet")}/><LocationPermissionModal /><LocationTelemetry /></>}
       <header className="app-header">
         <div className="app-header-inner">
           <div className="header-menu-wrap">

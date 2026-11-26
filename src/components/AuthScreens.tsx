@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import {OrangeUpload} from "./OrangeUpload";
 import {DriverAffiliation} from "./DriverAffiliation";
 import type {Session} from "@/lib/api";
 import { useSessionState } from "@/lib/session";
@@ -408,6 +409,7 @@ export function RegisterScreen() {
   const [codeNotice, setCodeNotice] = useState("");
   const [name, setName] = useState("");
   const [vehicleType, setVehicleType] = useState("");
+  const [noDrivingLicense,setNoDrivingLicense]=useState(false);
   const [activityCity,setActivityCity]=useState("");
   const [activityDistrict,setActivityDistrict]=useState("");
   const [plate, setPlate] = useState({ two: "", letter: "ب", three: "", province: "" });
@@ -473,8 +475,8 @@ export function RegisterScreen() {
       setError("کد ملی واردشده معتبر نیست. ۱۰ رقم کد ملی را بررسی کن.");
       return;
     }
-    if (!docFile||!extraDocs.birthCertificate||!extraDocs.drivingLicense||!extraDocs.vehicleOwnershipDocument) {
-      setError("کارت ملی، شناسنامه، گواهینامه و یکی از مدارک خودرو را بارگذاری کنید.");
+    if (!docFile||(!noDrivingLicense&&!extraDocs.drivingLicense)) {
+      setError("شناسنامه یا کارت ملی و گواهینامه را بارگذاری کنید، یا گزینه «گواهینامه ندارم» را بزنید.");
       return;
     }
     const normalizedPhone = normalizePhone(phone);
@@ -490,11 +492,13 @@ export function RegisterScreen() {
     setBusy(true);
     try {
       if (!challenge || challenge.phone !== normalizedPhone || !/^\d{6}$/.test(latinDigits(code))) throw new Error("کد تأیید شماره همراه را دریافت و وارد کنید.");
-      const files=[docFile,extraDocs.birthCertificate!,extraDocs.drivingLicense!,extraDocs.vehicleOwnershipDocument!];
+      const files=[docFile,...(!noDrivingLicense&&extraDocs.drivingLicense?[extraDocs.drivingLicense]:[]),...(extraDocs.vehicleOwnershipDocument?[extraDocs.vehicleOwnershipDocument]:[])];
       for(const file of files)if(!['image/jpeg','image/png'].includes(file.type)||file.size===0||file.size>5*1024*1024)throw new Error('هر مدرک باید تصویر JPG یا PNG و حداکثر ۵ مگابایت باشد.');
-      const [identityDocument,birthCertificate,drivingLicense,vehicleOwnershipDocument]=await Promise.all(files.map(file=>uploadDocument(file)));
+      const identityDocument=await uploadDocument(docFile);
+      const drivingLicense=!noDrivingLicense&&extraDocs.drivingLicense?await uploadDocument(extraDocs.drivingLicense):undefined;
+      const vehicleOwnershipDocument=extraDocs.vehicleOwnershipDocument?await uploadDocument(extraDocs.vehicleOwnershipDocument):undefined;
       const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
-      const session = await register({ activityCity:activityCity.trim(),activityDistrict:activityDistrict.trim(),challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument,birthCertificate,drivingLicense,vehicleOwnershipDocument,vehicleEvidenceType });
+      const session = await register({ activityCity:activityCity.trim(),activityDistrict:activityDistrict.trim(),challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument,noDrivingLicense,drivingLicense,vehicleOwnershipDocument,vehicleEvidenceType });
       saveSession(session, true);
       setRegistered(session);
     } catch (error) { setError(errorMessage(error)); }
@@ -587,11 +591,13 @@ export function RegisterScreen() {
             <section className="register-section">
               <div className="register-section-head">
                 <span className="register-step">۴</span>
-                <div><strong>احراز هویت</strong><small>کارت ملی، شناسنامه، گواهینامه و مدرک خودرو الزامی هستند.</small></div>
+                <div><strong>احراز هویت</strong><small>شناسنامه یا کارت ملی الزامی است؛ مدرک خودرو اختیاری است.</small></div>
               </div>
-              <DocumentUpload fileName={docFile?.name ?? ""} preview={docPreview} onPick={pickDocument} onClear={clearDocument} />
-              {[['birthCertificate','شناسنامه'],['drivingLicense','گواهینامه'],['vehicleOwnershipDocument','مدرک خودرو']].map(([key,title])=><label className="form-field" key={key}><span className="field-label">{title} <b className="field-required">*</b></span><input type="file" aria-label={`بارگذاری ${title}`} accept="image/jpeg,image/png" onChange={e=>{const file=e.target.files?.[0]||null;setExtraDocs(value=>({...value,[key]:file}));}}/><small>{extraDocs[key]?.name||'تصویر JPG یا PNG، حداکثر ۵ مگابایت'}</small></label>)}
-              <label className="form-field"><span className="field-label">نوع مدرک خودرو</span><select aria-label="نوع مدرک خودرو" value={vehicleEvidenceType} onChange={e=>setVehicleEvidenceType(e.target.value)}><option value="VEHICLE_CARD">کارت ماشین</option><option value="INSURANCE">بیمه‌نامه</option><option value="TECHNICAL_INSPECTION">گواهی معاینه فنی</option></select><small>یک مدرک خوانا به نام خودتان کافی است.</small></label>
+              <DocumentUpload label="شناسنامه یا کارت ملی" fileName={docFile?.name ?? ""} preview={docPreview} onPick={pickDocument} onClear={clearDocument} />
+              <label className="license-declaration"><input type="checkbox" checked={noDrivingLicense} onChange={e=>{setNoDrivingLicense(e.target.checked);if(e.target.checked)setExtraDocs(old=>({...old,drivingLicense:null}));}}/>گواهینامه ندارم</label>
+              {!noDrivingLicense&&<OrangeUpload label="گواهینامه" onPick={file=>setExtraDocs(old=>({...old,drivingLicense:file}))}/>}
+              <p>مدرک خودرو (اختیاری)</p><OrangeUpload label="مدرک خودرو" onPick={file=>setExtraDocs(old=>({...old,vehicleOwnershipDocument:file}))}/>
+              <label className="form-field"><span className="field-label">نوع مدرک خودرو</span><select className="vehicle-evidence-select" aria-label="نوع مدرک خودرو" value={vehicleEvidenceType} onChange={e=>setVehicleEvidenceType(e.target.value)}><option value="VEHICLE_CARD">کارت ماشین</option><option value="INSURANCE">بیمه‌نامه</option><option value="TECHNICAL_INSPECTION">گواهی معاینه فنی</option></select><small>یک مدرک خوانا به نام خودتان کافی است.</small></label>
             </section>
 
             <section className="register-section register-section--account">

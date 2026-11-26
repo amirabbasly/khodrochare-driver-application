@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import {DriverAffiliation} from "./DriverAffiliation";
+import type {Session} from "@/lib/api";
 import { useSessionState } from "@/lib/session";
 import "@/components/driver/service-picker.css";
 import Link from "next/link";
@@ -397,6 +399,7 @@ export function LoginScreen() {
 }
 
 export function RegisterScreen() {
+  const [registered,setRegistered]=useState<Session|null>(null);
   const router = useRouter();
   const {authenticate} = useSessionState();
   const [challenge, setChallenge] = useState<{challengeId:string;phone:string;retryAt:number}|null>(null);
@@ -493,12 +496,12 @@ export function RegisterScreen() {
       const codes: Record<string, string> = { repair: "REPAIR", transport: "TOWING", carwash: "MOBILE_CARWASH", maintenance: "PERIODIC_SERVICE", inspection: "INSPECTION" };
       const session = await register({ activityCity:activityCity.trim(),activityDistrict:activityDistrict.trim(),challengeId: challenge!.challengeId, code: latinDigits(code), fullName: name.trim(), phone: normalizedPhone, password, nationalId: nationalCode, vehicleType: vehicleType.trim(), vehiclePlate: `${plate.two} ${plate.letter} ${plate.three} - ${plate.province}`, services: services.map(id => codes[id]), identityDocument,birthCertificate,drivingLicense,vehicleOwnershipDocument,vehicleEvidenceType });
       saveSession(session, true);
-      authenticate(session.user);
-      router.replace("/home");
+      setRegistered(session);
     } catch (error) { setError(errorMessage(error)); }
     finally { setBusy(false); }
   }
 
+  if(registered)return <main className="auth-page" dir="rtl"><DriverAffiliation onDone={()=>{authenticate(registered.user);router.replace("/home");}}/></main>;
   return (
     <main className="auth-page auth-page--register" dir="rtl">
       <div className="auth-layout auth-layout--register">

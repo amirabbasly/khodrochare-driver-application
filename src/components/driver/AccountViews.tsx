@@ -2,6 +2,7 @@
 
 import {errorMessage} from "@/lib/api";
 import Link from "next/link";
+import {DriverAffiliation} from "../DriverAffiliation";
 import {ProfilePhoneChange} from "../ProfilePhoneChange";
 import { IranPlate } from "../IranPlate";
 import { BluePickup } from "../BluePickup";
@@ -103,7 +104,7 @@ export function ProfileView({
             <label className="form-field"><span className="field-label">شهر محل فعالیت</span><span className="field-control"><input value={activityCity} onChange={e=>setActivityCity(e.target.value)} minLength={2} maxLength={100} required/></span></label><label className="form-field"><span className="field-label">بخش / منطقه محل فعالیت</span><span className="field-control"><input value={activityDistrict} onChange={e=>setActivityDistrict(e.target.value)} maxLength={150}/></span></label><p className="account-help">شهر و بخش فقط برای نمایش اطلاعات است و روی دریافت بار تأثیری ندارد.</p>{saveError&&<p className="form-error" role="alert">{saveError}</p>}
             <button className="primary-button" type="submit" disabled={saving}>{saving?"در حال ذخیره…":"ذخیرهٔ تغییرات"} <Icon name="check" size={16} /></button>
           </form>
-          <ProfilePhoneChange/>
+          <ProfilePhoneChange/><DriverAffiliation/>
         </section>
       </div>
 

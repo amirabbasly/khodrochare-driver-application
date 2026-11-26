@@ -85,7 +85,7 @@ export function SplashGate({ children }: { children: ReactNode }) {
 export function PwaBootstrap() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => {
       // PWA installation remains available even if service-worker registration is blocked.
     });
   }, []);

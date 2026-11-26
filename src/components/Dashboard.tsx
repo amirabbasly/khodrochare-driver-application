@@ -1,7 +1,7 @@
 "use client";
 import {VerificationNotices,PendingVerificationDialog} from "./DriverVerification";
 import {DiagnosticOffer} from "./DiagnosticOffer";
-import {MarketStore} from "./MarketStore";
+import {MarketStore} from './MarketStore';
 import {PendingFeatureDialog} from "./PendingFeature";
 import {AssistantChat} from "./AssistantChat";
 import {WalletPanel} from "./WalletPanel";
@@ -293,7 +293,7 @@ export default function Dashboard() {
 
   return (
     <div className="app-frame" dir="rtl">
-      {user && <><CommissionDebtNotice balance={wallet.data?.balanceToman??null} name={userName} onPay={()=>navigate("wallet")}/><LocationPermissionModal /><LocationTelemetry /></>}
+      {user && <>{user.verificationStatus==='APPROVED'&&user.verificationNoticeSeenAt!==null&&user.registrationNoticeSeenAt!==null&&!verificationOpen&&<CommissionDebtNotice balance={wallet.data?.balanceToman??null} name={userName} onPay={()=>navigate("wallet")}/>}<LocationPermissionModal /><LocationTelemetry /></>}
       <header className="app-header">
         <div className="app-header-inner">
           <div className="header-menu-wrap">

@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import {chunkRecoveryScript} from "@/lib/chunk-recovery";
+import "./interaction.css";
 import type { ReactNode } from "react";
 import { PwaBootstrap, SplashGate } from "@/components/AppExperience";
 import { SessionProvider } from "@/lib/session";
@@ -39,6 +41,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
+      <head><link rel="preload" href="/fonts/Vazir.woff2" as="font" type="font/woff2" crossOrigin="anonymous"/><script dangerouslySetInnerHTML={{__html:chunkRecoveryScript}}/></head>
       <body>
         <AppZoomGuard />
         <PwaBootstrap />

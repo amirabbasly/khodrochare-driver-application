@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import {OrangeUpload} from "./OrangeUpload";
+import "./upload-controls.css";
+import "./registration-verification.css";
 import {DriverAffiliation} from "./DriverAffiliation";
 import type {Session} from "@/lib/api";
 import { useSessionState } from "@/lib/session";
@@ -399,6 +400,13 @@ export function LoginScreen() {
   );
 }
 
+function ExtraDocumentUpload({label,file,onChange}:{label:string;file:File|null;onChange:(file:File|null)=>void}){
+ const [preview,setPreview]=useState(''),url=useRef('');
+ useEffect(()=>()=>{if(url.current)URL.revokeObjectURL(url.current);},[]);
+ function choose(file:File|null){if(url.current)URL.revokeObjectURL(url.current);url.current=file?URL.createObjectURL(file):'';setPreview(url.current);onChange(file);}
+ return <DocumentUpload label={label} fileName={file?.name||''} preview={preview} onPick={choose} onClear={()=>choose(null)}/>;
+}
+
 export function RegisterScreen() {
   const [registered,setRegistered]=useState<Session|null>(null);
   const router = useRouter();
@@ -593,11 +601,24 @@ export function RegisterScreen() {
                 <span className="register-step">۴</span>
                 <div><strong>احراز هویت</strong><small>شناسنامه یا کارت ملی الزامی است؛ مدرک خودرو اختیاری است.</small></div>
               </div>
-              <DocumentUpload label="شناسنامه یا کارت ملی" fileName={docFile?.name ?? ""} preview={docPreview} onPick={pickDocument} onClear={clearDocument} />
-              <label className="license-declaration"><input type="checkbox" checked={noDrivingLicense} onChange={e=>{setNoDrivingLicense(e.target.checked);if(e.target.checked)setExtraDocs(old=>({...old,drivingLicense:null}));}}/>گواهینامه ندارم</label>
-              {!noDrivingLicense&&<OrangeUpload label="گواهینامه" onPick={file=>setExtraDocs(old=>({...old,drivingLicense:file}))}/>}
-              <p>مدرک خودرو (اختیاری)</p><OrangeUpload label="مدرک خودرو" onPick={file=>setExtraDocs(old=>({...old,vehicleOwnershipDocument:file}))}/>
-              <label className="form-field"><span className="field-label">نوع مدرک خودرو</span><select className="vehicle-evidence-select" aria-label="نوع مدرک خودرو" value={vehicleEvidenceType} onChange={e=>setVehicleEvidenceType(e.target.value)}><option value="VEHICLE_CARD">کارت ماشین</option><option value="INSURANCE">بیمه‌نامه</option><option value="TECHNICAL_INSPECTION">گواهی معاینه فنی</option></select><small>یک مدرک خوانا به نام خودتان کافی است.</small></label>
+              <p className="verification-intro">فقط دو مرحلهٔ اصلی؛ مرحلهٔ سوم اختیاری است.</p>
+              <div className="verification-required-grid">
+                <section className="verification-upload-step" aria-label="مرحله اول احراز هویت">
+                  <header><span>۱ از ۲</span><strong>مدرک هویتی</strong></header>
+                  <DocumentUpload label="شناسنامه یا کارت ملی" fileName={docFile?.name ?? ""} preview={docPreview} onPick={pickDocument} onClear={clearDocument} />
+                </section>
+                <section className="verification-upload-step" aria-label="مرحله دوم احراز هویت">
+                  <header><span>۲ از ۲</span><strong>وضعیت گواهینامه</strong></header>
+                  <label className="license-declaration"><input type="checkbox" checked={noDrivingLicense} onChange={e=>{setNoDrivingLicense(e.target.checked);if(e.target.checked)setExtraDocs(old=>({...old,drivingLicense:null}));}}/>گواهینامه ندارم</label>
+                  {!noDrivingLicense?<ExtraDocumentUpload label="گواهینامه" file={extraDocs.drivingLicense} onChange={file=>setExtraDocs(old=>({...old,drivingLicense:file}))}/>:<p className="verification-declared">وضعیت گواهینامه مشخص شد؛ نیازی به بارگذاری نیست.</p>}
+                </section>
+              </div>
+              <details className="verification-optional">
+                <summary><span>مرحله ۳ · مدرک خودرو</span><b>اختیاری</b></summary>
+                <p>در صورت تمایل، یکی از مدارک خودرو را اضافه کنید.</p>
+                <label className="form-field"><span className="field-label">نوع مدرک خودرو</span><select className="vehicle-evidence-select" aria-label="نوع مدرک خودرو" value={vehicleEvidenceType} onChange={e=>setVehicleEvidenceType(e.target.value)}><option value="VEHICLE_CARD">کارت ماشین</option><option value="INSURANCE">بیمه‌نامه</option><option value="TECHNICAL_INSPECTION">گواهی معاینه فنی</option></select></label>
+                <ExtraDocumentUpload label="مدرک خودرو" file={extraDocs.vehicleOwnershipDocument} onChange={file=>setExtraDocs(old=>({...old,vehicleOwnershipDocument:file}))}/>
+              </details>
             </section>
 
             <section className="register-section register-section--account">

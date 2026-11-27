@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from 'react';
 import {api} from './api';
-export type Wallet={balanceToman:number;sandboxBalanceToman:number;mode:'sandbox'|'live';entries:{kind?:string;id:string;amountToman:number;mode:'sandbox'|'live';createdAt:string}[]};
+export type Wallet={summary?:{topupsToman:number;earningsToman:number;deductionsToman:number;spendingToman:number;balanceToman:number};balanceToman:number;sandboxBalanceToman:number;mode:'sandbox'|'live';entries:{kind?:string;id:string;amountToman:number;mode:'sandbox'|'live';createdAt:string}[]};
 export function useWallet(){
   const[data,setData]=useState<Wallet|null>(null),[error,setError]=useState('');
   useEffect(()=>{

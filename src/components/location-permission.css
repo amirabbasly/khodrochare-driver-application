@@ -1,0 +1,11 @@
+.location-permission { width: min(430px, calc(100vw - 32px)); margin: auto; padding: 30px 26px 24px; border: 1px solid #e3e9ed; border-radius: 24px; background: #fff; color: #112a38; text-align: center; font-family: inherit; box-shadow: 0 24px 80px #112a3833; max-height: calc(100dvh - 40px); overflow-y: auto; }
+.location-permission::backdrop { background: #102b39a6; backdrop-filter: blur(6px); }
+.location-permission-icon { display: grid; place-items: center; width: 70px; height: 70px; margin: 0 auto 18px; border-radius: 22px; background: #fff1e5; color: #e77a29; }
+.location-permission-kicker { color: #6b7e89; font-size: 12px; }
+.location-permission h2 { margin: 9px 0 12px; font-size: 22px; font-weight: 800; }
+.location-permission p { margin: 0 0 22px; line-height: 1.95; font-size: 14px; color: #526672; }
+.location-permission .primary-button { display: flex; justify-content: center; width: 100%; min-height: 48px; gap: 8px; }
+.location-permission-later { display: block; width: 100%; min-height: 46px; margin-top: 8px; border: 0; background: transparent; color: #526672; font: inherit; font-size: 13px; cursor: pointer; }
+.location-permission small { display: block; margin-top: 10px; line-height: 1.8; font-size: 11px; color: #70828d; }
+.location-permission p.location-permission-error { padding: 10px; border-radius: 10px; background: #fff0ed; color: #a13623; font-size: 12px; }
+.location-permission button:focus-visible { outline: 3px solid #e77a29; outline-offset: 3px; }

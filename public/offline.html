@@ -2,11 +2,14 @@
 <html lang="fa" dir="rtl">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="theme-color" content="#112a38" />
     <title>بدون اتصال | خودرو چاره</title>
     <style>
       * { box-sizing: border-box; }
+      html, body, body * { touch-action: pan-x pan-y; }
       body { min-height: 100vh; margin: 0; display: grid; place-items: center; padding: 24px; color: #173140; background: #f4f7f8; font-family: Tahoma, sans-serif; text-align: center; }
       main { width: min(440px, 100%); padding: 36px 28px; border: 1px solid #e4eaed; border-radius: 24px; background: #fff; box-shadow: 0 18px 55px rgba(22, 48, 64, .09); }
       img { width: 80px; height: 80px; margin-bottom: 18px; }

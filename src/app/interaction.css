@@ -1,0 +1,6 @@
+/* Native scrolling and click handling: no gesture interception or click delay. */
+:where(button,a[href],[role="button"]){touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:opacity 120ms ease-out}
+:where(button,a[href],[role="button"]):not(:disabled):not([aria-disabled="true"]):active{opacity:.82}
+html{scroll-padding-bottom:110px}
+:where(input,textarea,select){scroll-margin-block:100px 120px}
+@media(prefers-reduced-motion:reduce){:where(button,a[href],[role="button"]){transition:none}}

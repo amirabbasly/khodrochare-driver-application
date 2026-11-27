@@ -68,8 +68,13 @@ export function LocationPickerMap({
     async function init() {
       const L = (await import("leaflet")).default;
       if (disposed || !containerRef.current || mapRef.current) return;
+      let initial = TEHRAN;
+      try {
+        const cached = JSON.parse(sessionStorage.getItem("khodrochare_location_v1") || "null");
+        if (cached && Number.isFinite(cached.latitude) && Number.isFinite(cached.longitude) && Date.now() - Date.parse(cached.recordedAt) < 120000) initial = [cached.latitude, cached.longitude];
+      } catch {}
       const map = L.map(containerRef.current, {
-        center: TEHRAN,
+        center: initial,
         zoom: 12,
         zoomControl: true,
         attributionControl: false,
@@ -79,7 +84,7 @@ export function LocationPickerMap({
       clickHandler = (e) => dropPin(L, map, e.latlng.lat, e.latlng.lng);
       map.on("click", clickHandler);
       mapRef.current = map;
-      dropPin(L, map, TEHRAN[0], TEHRAN[1]);
+      dropPin(L, map, initial[0], initial[1]);
       window.setTimeout(() => map.invalidateSize(), 220);
     }
 
@@ -195,12 +200,14 @@ export function TrackingMap({
   return <div ref={containerRef} className="map-canvas" />;
 }
 
-export function UserPinMap({ lat, lng }: { lat: number; lng: number }) {
+export function UserPinMap({ lat, lng, driver }: { lat: number; lng: number; driver?: { latitude: number; longitude: number } | null }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<import("leaflet").Map | null>(null);
+  const driverRef = useRef<import("leaflet").Marker | null>(null);
 
   useEffect(() => {
     let disposed = false;
+    let sizeTimer: ReturnType<typeof setTimeout> | undefined;
 
     async function init() {
       const L = await import("leaflet");
@@ -215,16 +222,108 @@ export function UserPinMap({ lat, lng }: { lat: number; lng: number }) {
       L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
       L.marker([lat, lng], { icon: brandPin(L) }).addTo(map);
       mapRef.current = map;
-      window.setTimeout(() => map.invalidateSize(), 220);
+      sizeTimer = setTimeout(() => map.invalidateSize(), 220);
     }
 
     init();
     return () => {
       disposed = true;
+      if (sizeTimer !== undefined) clearTimeout(sizeTimer);
       mapRef.current?.remove();
       mapRef.current = null;
+      driverRef.current = null;
     };
   }, [lat, lng]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const update = async () => {
+      const L = await import("leaflet");
+      if (cancelled || !mapRef.current) return;
+      if (driver) {
+        if (driverRef.current) driverRef.current.setLatLng([driver.latitude, driver.longitude]);
+        else driverRef.current = L.marker([driver.latitude, driver.longitude], { icon: rescuerPin(L) }).addTo(mapRef.current);
+        mapRef.current.fitBounds([[lat, lng], [driver.latitude, driver.longitude]], { padding: [35, 35], maxZoom: 15 });
+      } else {
+        driverRef.current?.remove();
+        driverRef.current = null;
+      }
+    };
+    void update();
+    const timer = window.setTimeout(update, 300);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [lat, lng, driver]);
+
   return <div ref={containerRef} className="map-canvas" aria-label="موقعیت شما روی نقشه" />;
+}
+
+export function LoadRequestMap({
+  lat,
+  lng,
+  label,
+}: {
+  lat: number;
+  lng: number;
+  label?: string;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<import("leaflet").Map | null>(null);
+  const markerRef = useRef<import("leaflet").Marker | null>(null);
+  const pointRef=useRef<[number,number]>([lat,lng]);
+  const sizeTimer=useRef<ReturnType<typeof setTimeout>|null>(null);
+
+  useEffect(() => {
+    let disposed = false;
+
+    async function init() {
+      const L = (await import("leaflet")).default;
+      if (disposed || !containerRef.current || mapRef.current) return;
+      const map = L.map(containerRef.current, {
+        center: pointRef.current,
+        zoom: 15,
+        zoomControl: false,
+        attributionControl: false,
+        dragging: true,
+        touchZoom: true,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        preferCanvas: true,
+      });
+      L.tileLayer(TILE_URL, { maxZoom: 19, attribution: TILE_ATTR, crossOrigin: true }).addTo(map);
+      const icon = L.divIcon({
+        className: "leaflet-request-pin",
+        html: '<span class="leaflet-request-pulse"></span><span class="leaflet-request-dot"></span>',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+      });
+      markerRef.current = L.marker(pointRef.current, { icon, keyboard: false, interactive: false }).addTo(map);
+      mapRef.current = map;
+      sizeTimer.current=setTimeout(() => map.invalidateSize(), 220);
+    }
+
+    init();
+    return () => {
+      disposed = true;
+      if(sizeTimer.current)clearTimeout(sizeTimer.current);
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    };
+    // The map is created once; position updates are handled below.
+  }, []);
+
+  useEffect(() => {
+    pointRef.current=[lat,lng];
+    markerRef.current?.setLatLng([lat, lng]);
+    mapRef.current?.setView([lat, lng], 15, { animate: false });
+  }, [lat, lng]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="map-canvas load-map-canvas"
+      role="img"
+      aria-label={label ? `موقعیت ${label} روی نقشه` : "موقعیت امدادخواه روی نقشه"}
+    />
+  );
 }

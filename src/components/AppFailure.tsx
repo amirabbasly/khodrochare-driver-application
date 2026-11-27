@@ -1,0 +1,4 @@
+"use client";
+export function AppFailure({retry}:{retry:()=>void}){
+ return <main dir="rtl" style={{minHeight:'100dvh',display:'grid',placeItems:'center',padding:24,background:'#f5f7f8',color:'#172936',fontFamily:'Vazir,Tahoma,sans-serif'}}><section role="alert" style={{width:'100%',maxWidth:440,padding:28,borderRadius:24,background:'#fff',border:'1px solid #e7ecef',textAlign:'center',lineHeight:2}}><h1 style={{fontSize:22}}>بارگذاری صفحه انجام نشد</h1><p>اتصال اینترنت را بررسی کنید و دوباره تلاش کنید.</p><button type="button" onClick={retry} style={{minHeight:48,width:'100%',padding:12,border:0,borderRadius:12,background:'#c55113',color:'#fff',font:'inherit',cursor:'pointer'}}>تلاش دوباره</button><a href="/home" style={{display:'block',padding:12,color:'#98410f'}}>بازگشت به خانه</a></section></main>;
+}

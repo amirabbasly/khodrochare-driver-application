@@ -1,0 +1,4 @@
+﻿.wallet-receipts .wallet-transfer-image{display:block;width:100%;max-width:540px;height:auto;margin:16px auto;border-radius:18px}
+.wallet-card-number{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:14px;border:1px solid #dfe7ed;border-radius:12px;background:#f7fafc}
+.wallet-card-number strong{font-size:clamp(16px,4.5vw,23px);font-variant-numeric:tabular-nums;color:#14364d;user-select:all;letter-spacing:1px}
+.wallet-card-number button{min-height:44px}.wallet-receipts p{line-height:1.9;overflow-wrap:anywhere}.wallet-receipts input[type=file]{width:100%;max-width:100%;font:inherit}
